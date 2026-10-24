@@ -1,0 +1,54 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "@fontsource/poppins/500.css";
+@import "@fontsource/poppins/600.css";
+@import "@fontsource/poppins/700.css";
+
+/*
+ * Design tokens (SPEC §4.2). Figma used three blues (#0060F8, #1070F8, #4078F8);
+ * they are unified on #1070F8. Exact values will be re-checked against Figma frames.
+ */
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Poppins", "Inter Variable", ui-sans-serif, sans-serif;
+
+  --color-primary-50: #eaf2ff;
+  --color-primary-100: #d4e4fe;
+  --color-primary-200: #a9c9fd;
+  --color-primary-500: #3d8afa;
+  --color-primary-600: #1070f8;
+  --color-primary-700: #0b5ad0;
+  --color-primary-800: #0a479f;
+
+  --color-success-50: #f0fdf4;
+  --color-success-500: #22c55e;
+  --color-success-700: #15803d;
+  --color-warning-50: #fffbeb;
+  --color-warning-500: #f59e0b;
+  --color-warning-700: #b45309;
+  --color-danger-50: #fef2f2;
+  --color-danger-500: #ef4444;
+  --color-danger-700: #b91c1c;
+
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-sheet: 16px;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-neutral-50 font-sans text-neutral-900 antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+  }
+}

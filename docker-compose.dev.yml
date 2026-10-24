@@ -1,0 +1,31 @@
+# Development override (hot reload):
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+# API: http://localhost:8000/api/docs   Web (Vite): http://localhost:5173   DB: localhost:5432
+services:
+  db:
+    ports:
+      - "${DB_PORT:-5432}:5432"
+
+  api:
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    environment:
+      WATCHFILES_FORCE_POLLING: "true"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api/app:/app/app
+      - ./api/alembic:/app/alembic
+
+  web:
+    build:
+      context: ./web
+      target: dev
+    image: h4t-web:dev
+    environment:
+      VITE_API_PROXY: http://api:8000
+      VITE_USE_POLLING: "true"
+    ports: !override
+      - "5173:5173"
+    volumes:
+      - ./web:/app
+      - /app/node_modules

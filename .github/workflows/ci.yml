@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API · lint, types, tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: h4t
+          POSTGRES_PASSWORD: h4t
+          POSTGRES_DB: h4t_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U h4t -d h4t_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql+asyncpg://h4t:h4t@localhost:5432/h4t_test
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy app tests
+      - run: uv run pytest
+      - name: Models match migrations
+        run: DATABASE_URL=$TEST_DATABASE_URL uv run alembic check
+
+  web:
+    name: Web · lint, types, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: web/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm build
+
+  images:
+    name: Docker images
+    needs: [api, web]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      PUSH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lowercase image owner (GHCR requires it)
+        run: echo "OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        if: env.PUSH == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build h4t-api
+        uses: docker/build-push-action@v6
+        with:
+          context: api
+          push: ${{ env.PUSH == 'true' }}
+          tags: |
+            ghcr.io/${{ env.OWNER }}/h4t-api:${{ github.sha }}
+            ghcr.io/${{ env.OWNER }}/h4t-api:latest
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+      - name: Build h4t-web
+        uses: docker/build-push-action@v6
+        with:
+          context: web
+          push: ${{ env.PUSH == 'true' }}
+          tags: |
+            ghcr.io/${{ env.OWNER }}/h4t-web:${{ github.sha }}
+            ghcr.io/${{ env.OWNER }}/h4t-web:latest
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max

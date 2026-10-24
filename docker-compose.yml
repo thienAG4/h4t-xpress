@@ -1,0 +1,52 @@
+# Full stack, production-like:  docker compose up -d --build  ->  http://localhost:8080
+name: h4t-xpress
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-h4t}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-h4t_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-h4t}
+      TZ: UTC
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  api:
+    build: ./api
+    image: h4t-api:local
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-h4t}:${POSTGRES_PASSWORD:-h4t_dev_password}@db:5432/${POSTGRES_DB:-h4t}
+      UPLOAD_DIR: /app/uploads
+      SHOPNOW_WEBHOOK_URL: http://api:8000/api/v1/sim/shopnow/webhooks
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build: ./web
+    image: h4t-web:local
+    environment:
+      API_UPSTREAM: http://api:8000
+    ports:
+      - "${WEB_PORT:-8080}:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  uploads:
