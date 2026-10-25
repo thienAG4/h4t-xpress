@@ -58,3 +58,35 @@ class SimWebhookOut(BaseModel):
     payload: dict[str, Any]
     signature_valid: bool
     received_at: datetime
+
+
+class TrackStepOut(BaseModel):
+    at: datetime
+    event: str
+    status: str | None
+    title: str
+    message: str | None
+
+
+class TrackDriverOut(BaseModel):
+    name: str
+    phone: str | None
+
+
+class TrackOut(BaseModel):
+    """Customer tracking page (S-03), built only from what ShopNow received."""
+
+    waybill_code: str
+    partner_order_ref: str
+    recipient_name: str
+    delivery_address: str
+    status: str
+    status_label: str
+    promised_at: datetime
+    eta: datetime | None
+    eta_is_estimate: bool
+    is_late: bool
+    delay_message: str | None
+    driver: TrackDriverOut | None
+    proof_url: str | None
+    steps: list[TrackStepOut]

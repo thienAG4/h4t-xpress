@@ -59,6 +59,11 @@ class Settings(BaseSettings):
     seed_history_days: int = 90
     seed_random_seed: int = 11
 
+    # Background worker (SPEC §5.6). Tests turn it off and call the job functions directly.
+    worker_enabled: bool = True
+    worker_poll_seconds: float = 1.0
+    worker_sweep_seconds: float = 5.0
+
     @field_validator("database_url")
     @classmethod
     def _normalize_database_url(cls, value: str) -> str:

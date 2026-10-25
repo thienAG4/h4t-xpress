@@ -4,7 +4,6 @@ Orders go through the same partner service and validation as the public partner 
 ShopNow only knows what it sent and what H4T webhooks told it.
 """
 
-import hashlib
 import hmac
 import json
 import logging
@@ -19,6 +18,7 @@ from app.core.clock import local_today, utc_now
 from app.core.config import get_settings
 from app.core.errors import NotFound, ValidationFailed
 from app.core.pagination import Page, PageParams
+from app.core.security import sign_webhook
 from app.modules.orders.models import Order
 from app.modules.partner import service as partner_service
 from app.modules.partner.models import Partner
@@ -174,15 +174,11 @@ async def cancel_order(session: AsyncSession, waybill_code: str) -> SimOrderOut:
 # =============================== Webhooks ===============================
 
 
-def sign_payload(body: bytes, secret: str) -> str:
-    return "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
-
-
 async def receive_webhook(
     session: AsyncSession, body: bytes, signature: str | None
 ) -> SimWebhookOut:
     """Store a webhook from H4T and update ShopNow's view of the order (BR10)."""
-    expected = sign_payload(body, get_settings().shopnow_webhook_secret)
+    expected = sign_webhook(body, get_settings().shopnow_webhook_secret)
     valid = signature is not None and hmac.compare_digest(signature, expected)
     try:
         payload = json.loads(body or b"{}")

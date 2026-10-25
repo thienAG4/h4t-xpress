@@ -6,11 +6,20 @@ from fastapi import APIRouter, Depends, Header, Request
 
 from app.core.deps import DbSession, require_demo_mode
 from app.core.pagination import Page, PageParams, page_params
-from app.modules.sim import service
-from app.modules.sim.schemas import ManualOrderIn, RandomOrdersIn, SimOrderOut, SimWebhookOut
+from app.modules.sim import service, tracking
+from app.modules.sim.schemas import (
+    ManualOrderIn,
+    RandomOrdersIn,
+    SimOrderOut,
+    SimWebhookOut,
+    TrackOut,
+)
 
 router = APIRouter(
     prefix="/sim/shopnow", tags=["simulator"], dependencies=[Depends(require_demo_mode)]
+)
+track_router = APIRouter(
+    prefix="/sim/track", tags=["simulator"], dependencies=[Depends(require_demo_mode)]
 )
 Paging = Annotated[PageParams, Depends(page_params)]
 
@@ -58,3 +67,13 @@ async def list_webhooks(
     session: DbSession, paging: Paging, waybill_code: str | None = None
 ) -> Page[SimWebhookOut]:
     return await service.list_webhooks(session, paging, waybill_code)
+
+
+@track_router.get("/{waybill_code}", response_model=TrackOut)
+async def track_order(waybill_code: str, session: DbSession) -> TrackOut:
+    """
+    Customer tracking page (S-03), public: timeline, ETA, delay reason and apology.
+
+    Errors: ORDER_NOT_FOUND
+    """
+    return await tracking.track(session, waybill_code)

@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.core.db import get_session
-from app.core.errors import Forbidden, NotFound, Unauthorized
+from app.core.errors import Forbidden, NotFound, Unauthorized, ValidationFailed
 from app.core.security import decode_access_token
 
 DbSession = Annotated[AsyncSession, Depends(get_session)]
@@ -44,6 +44,13 @@ async def get_current_user(
 
 
 AuthUser = Annotated[CurrentUser, Depends(get_current_user)]
+
+
+def require_hub(user: CurrentUser) -> uuid.UUID:
+    """Hub of a hub-scoped account (manager screens); HUB_REQUIRED when it has none."""
+    if user.hub_id is None:
+        raise ValidationFailed("Your account is not linked to a hub", code="HUB_REQUIRED")
+    return user.hub_id
 
 
 def require_permission(*codes: str) -> Callable[[CurrentUser], Awaitable[CurrentUser]]:

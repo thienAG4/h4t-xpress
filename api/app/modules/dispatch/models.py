@@ -49,6 +49,14 @@ class DispatchOffer(UUIDPrimaryKey, CreatedAt, Base):
     expires_at: Mapped[datetime]
     responded_at: Mapped[datetime | None]
     decline_reason: Mapped[str | None] = mapped_column(String(255))
+    # A hub "rescue" offer (UC-04) hands several orders of an incident to one driver at once,
+    # because a driver can only have one pending offer (BR6). Empty for normal offers.
+    bundle_order_ids: Mapped[list[Any]] = mapped_column(
+        default=list, server_default=text("'[]'::jsonb")
+    )
+    incident_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("incidents.id", ondelete="SET NULL")
+    )
 
     __table_args__ = (
         Index(

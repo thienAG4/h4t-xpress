@@ -402,13 +402,20 @@ class DemoDataBuilder:
         for offset in range(3):
             work_date = self.today + timedelta(days=offset)
             for hub_code, drivers in self.drivers_by_hub.items():
-                for driver in drivers:
-                    if self.rng.random() > 0.85:
+                for position, driver in enumerate(drivers):
+                    # driver1 and driver2 (first two of the first hub) always work full days,
+                    # so the demo script with two driver windows works on any day.
+                    is_demo_pair = hub_code == catalog.HUBS[0].code and position < 2
+                    if not is_demo_pair and self.rng.random() > 0.85:
                         continue
-                    preferred = self.rng.choices(
-                        [ShiftCode.MORNING, ShiftCode.AFTERNOON, ShiftCode.FULL_DAY],
-                        weights=[35, 30, 35],
-                    )[0]
+                    preferred = (
+                        ShiftCode.FULL_DAY
+                        if is_demo_pair
+                        else self.rng.choices(
+                            [ShiftCode.MORNING, ShiftCode.AFTERNOON, ShiftCode.FULL_DAY],
+                            weights=[35, 30, 35],
+                        )[0]
+                    )
                     if taken[(hub_code, preferred, work_date)] >= capacity[preferred]:
                         continue
                     taken[(hub_code, preferred, work_date)] += 1

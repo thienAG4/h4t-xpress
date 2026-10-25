@@ -806,6 +806,1735 @@
         ]
       }
     },
+    "/api/v1/driver/heartbeat": {
+      "post": {
+        "tags": [
+          "driver: delivery"
+        ],
+        "summary": "Heartbeat",
+        "description": "Sent every 15 seconds while the app is open (BR4 freshness, BR10 position).\n\nInputs: {\"lat\", \"lng\", \"accuracy_m\"}, all optional when GPS is refused.",
+        "operationId": "heartbeat_api_v1_driver_heartbeat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HeartbeatIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/driver/offers/current": {
+      "get": {
+        "tags": [
+          "driver: delivery"
+        ],
+        "summary": "Get Current Offer",
+        "description": "The open offer with its countdown, or null.",
+        "operationId": "get_current_offer_api_v1_driver_offers_current_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/OfferOut"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Current Offer Api V1 Driver Offers Current Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/driver/offers/{offer_id}/accept": {
+      "post": {
+        "tags": [
+          "driver: delivery"
+        ],
+        "summary": "Accept Offer",
+        "description": "Take the order(s) of the offer (BR8). Returns the updated route.\n\nErrors: OFFER_NOT_FOUND, OFFER_CLOSED, OFFER_EXPIRED, ORDER_NOT_AVAILABLE",
+        "operationId": "accept_offer_api_v1_driver_offers__offer_id__accept_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RouteOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/driver/offers/{offer_id}/decline": {
+      "post": {
+        "tags": [
+          "driver: delivery"
+        ],
+        "summary": "Decline Offer",
+        "description": "Inputs: {\"reason\"} (optional). Errors: OFFER_NOT_FOUND, OFFER_CLOSED.",
+        "operationId": "decline_offer_api_v1_driver_offers__offer_id__decline_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeclineIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/driver/route": {
+      "get": {
+        "tags": [
+          "driver: delivery"
+        ],
+        "summary": "Get Route",
+        "description": "Today's work: parcels to collect first, then stops in delivery order.\n\nOutputs: {\"hub_name\", \"hub_lat\", \"hub_lng\", \"driver_lat\", \"driver_lng\",\n          \"to_pick_up\": [order], \"ready_to_start\", \"stops\": [stop]}",
+        "operationId": "get_route_api_v1_driver_route_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RouteOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/driver/route/start": {
+      "post": {
+        "tags": [
+          "driver: delivery"
+        ],
+        "summary": "Start Route",
+        "description": "Leave with every scanned parcel (BR9). Errors: NOTHING_TO_START.",
+        "operationId": "start_route_api_v1_driver_route_start_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/driver/orders/{order_id}": {
+      "get": {
+        "tags": [
+          "driver: delivery"
+        ],
+        "summary": "Get Order",
+        "operationId": "get_order_api_v1_driver_orders__order_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverOrderDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/driver/orders/{order_id}/scan": {
+      "post": {
+        "tags": [
+          "driver: delivery"
+        ],
+        "summary": "Scan Order",
+        "description": "Confirm the parcel in hand by its waybill code (manual entry on the web).\n\nInputs: {\"waybill_code\", \"lat\", \"lng\"}. Errors: WAYBILL_MISMATCH, INVALID_TRANSITION",
+        "operationId": "scan_order_api_v1_driver_orders__order_id__scan_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverOrderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/driver/orders/{order_id}/deliver": {
+      "post": {
+        "tags": [
+          "driver: delivery"
+        ],
+        "summary": "Deliver Order",
+        "description": "Successful hand-over with proof photos (BR16).\n\nInputs: {\"photo_file_ids\": [...], \"note\", \"lat\", \"lng\"}. Errors: EVIDENCE_REQUIRED",
+        "operationId": "deliver_order_api_v1_driver_orders__order_id__deliver_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliverIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverOrderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/driver/orders/{order_id}/fail": {
+      "post": {
+        "tags": [
+          "driver: delivery"
+        ],
+        "summary": "Fail Order",
+        "description": "Failed attempt with a reason (BR17); reschedule or return to the hub.\n\nInputs: {\"reason\", \"note\", \"proposed_date\"}. Errors: RESCHEDULE_DATE_INVALID",
+        "operationId": "fail_order_api_v1_driver_orders__order_id__fail_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FailIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverOrderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/driver/orders/{order_id}/eta": {
+      "put": {
+        "tags": [
+          "driver: delivery"
+        ],
+        "summary": "Update Eta",
+        "description": "Manual ETA with a reason (D-12). Errors: ETA_IN_PAST.",
+        "operationId": "update_eta_api_v1_driver_orders__order_id__eta_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EtaIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverOrderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/driver/orders/{order_id}/release": {
+      "post": {
+        "tags": [
+          "driver: delivery"
+        ],
+        "summary": "Release Order",
+        "description": "Give an order back before pickup (EX4). Errors: INVALID_TRANSITION.",
+        "operationId": "release_order_api_v1_driver_orders__order_id__release_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/driver/incidents": {
+      "get": {
+        "tags": [
+          "driver: incidents"
+        ],
+        "summary": "List My Incidents",
+        "operationId": "list_my_incidents_api_v1_driver_incidents_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/IncidentOut"
+                  },
+                  "type": "array",
+                  "title": "Response List My Incidents Api V1 Driver Incidents Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "driver: incidents"
+        ],
+        "summary": "Report Incident",
+        "description": "Report a problem on the road (UC-03 step 1).\n\nInputs: {\"type\", \"description\", \"photo_file_ids\": [...], \"order_ids\": [...] | null,\n         \"lat\", \"lng\"}. Without order_ids every order in hand is affected.\nErrors: EVIDENCE_REQUIRED, NO_ACTIVE_ORDER, FILE_NOT_FOUND",
+        "operationId": "report_incident_api_v1_driver_incidents_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IncidentReportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/driver/incidents/{incident_id}": {
+      "get": {
+        "tags": [
+          "driver: incidents"
+        ],
+        "summary": "Get My Incident",
+        "description": "Status and the hub's answer, refreshed by the `incident.updated` event.",
+        "operationId": "get_my_incident_api_v1_driver_incidents__incident_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Incident Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hub/dashboard": {
+      "get": {
+        "tags": [
+          "hub"
+        ],
+        "summary": "Get Dashboard",
+        "description": "Hub overview (H-01).\n\nOutputs: {\"date\", \"total\", \"by_status\", \"at_risk\", \"delivered_today\",\n          \"on_time_rate_today\", \"open_incidents\", \"high_priority_incidents\",\n          \"drivers_online\", \"drivers_on_shift\"}",
+        "operationId": "get_dashboard_api_v1_hub_dashboard_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/hub/orders": {
+      "get": {
+        "tags": [
+          "hub"
+        ],
+        "summary": "List Orders",
+        "description": "Orders of the hub, SLA risks first (UC-02).\n\nInputs (query): status (repeatable), at_risk, q (waybill, name or phone), today_only",
+        "operationId": "list_orders_api_v1_hub_orders_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrderStatus"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "at_risk",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "At Risk"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "today_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Today Only"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_HubOrderRow_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hub/orders/{order_id}": {
+      "get": {
+        "tags": [
+          "hub"
+        ],
+        "summary": "Get Order",
+        "description": "Order page with driver position, timeline and delivery attempts (H-03).",
+        "operationId": "get_order_api_v1_hub_orders__order_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubOrderDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hub/drivers": {
+      "get": {
+        "tags": [
+          "hub"
+        ],
+        "summary": "List Drivers",
+        "description": "Drivers of the hub with live position and load, online first.",
+        "operationId": "list_drivers_api_v1_hub_drivers_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/HubDriverRow"
+                  },
+                  "type": "array",
+                  "title": "Response List Drivers Api V1 Hub Drivers Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/hub/drivers/{driver_id}/route": {
+      "get": {
+        "tags": [
+          "hub"
+        ],
+        "summary": "Get Driver Route",
+        "description": "The same route the driver sees (D-07), for the tracking map.",
+        "operationId": "get_driver_route_api_v1_hub_drivers__driver_id__route_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "driver_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Driver Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RouteOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hub/orders/{order_id}/candidates": {
+      "get": {
+        "tags": [
+          "hub"
+        ],
+        "summary": "List Candidates",
+        "description": "Eligible drivers for a manual offer (H-07), best score first.",
+        "operationId": "list_candidates_api_v1_hub_orders__order_id__candidates_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CandidateOut"
+                  },
+                  "title": "Response List Candidates Api V1 Hub Orders  Order Id  Candidates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hub/orders/{order_id}/reassign": {
+      "post": {
+        "tags": [
+          "hub"
+        ],
+        "summary": "Reassign Order",
+        "description": "Offer the order to a chosen driver; the driver still has to accept (FR-H-01).\n\nInputs: {\"driver_id\"}\nErrors: INVALID_TRANSITION (parcel already picked up), DRIVER_NOT_AVAILABLE, DRIVER_BUSY",
+        "operationId": "reassign_order_api_v1_hub_orders__order_id__reassign_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReassignIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubOrderDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hub/orders/{order_id}/hold": {
+      "post": {
+        "tags": [
+          "hub"
+        ],
+        "summary": "Hold Order",
+        "description": "Keep a waiting order at the hub. Errors: INVALID_TRANSITION.",
+        "operationId": "hold_order_api_v1_hub_orders__order_id__hold_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HoldIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubOrderDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hub/orders/{order_id}/release-hold": {
+      "post": {
+        "tags": [
+          "hub"
+        ],
+        "summary": "Release Hold",
+        "description": "ON_HOLD -> AWAITING_ASSIGNMENT; dispatch starts a new cycle.",
+        "operationId": "release_hold_api_v1_hub_orders__order_id__release_hold_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubOrderDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hub/orders/{order_id}/returned": {
+      "post": {
+        "tags": [
+          "hub"
+        ],
+        "summary": "Confirm Returned",
+        "description": "The returned parcel is back at the hub (RETURNING -> RETURNED_TO_HUB).",
+        "operationId": "confirm_returned_api_v1_hub_orders__order_id__returned_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubOrderDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hub/incidents/summary": {
+      "get": {
+        "tags": [
+          "hub: incidents"
+        ],
+        "summary": "Get Summary",
+        "description": "Counters of H-04: open, in review, resolving, resolved today, by priority, by type.",
+        "operationId": "get_summary_api_v1_hub_incidents_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentSummaryOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/hub/incidents": {
+      "get": {
+        "tags": [
+          "hub: incidents"
+        ],
+        "summary": "List Incidents",
+        "description": "Incident list (H-05), open and high priority first.",
+        "operationId": "list_incidents_api_v1_hub_incidents_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/IncidentStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/IncidentPriority"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Priority"
+            }
+          },
+          {
+            "name": "open_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Open Only"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_IncidentListItem_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hub/incidents/{incident_id}": {
+      "get": {
+        "tags": [
+          "hub: incidents"
+        ],
+        "summary": "Get Incident",
+        "operationId": "get_incident_api_v1_hub_incidents__incident_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Incident Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hub/incidents/{incident_id}/classify": {
+      "post": {
+        "tags": [
+          "hub: incidents"
+        ],
+        "summary": "Classify Incident",
+        "description": "Set category and priority (UC-03 step 2, BR13).\n\nInputs: {\"category\": \"OBJECTIVE\" | \"SUBJECTIVE\", \"priority\": \"LOW\" | \"MEDIUM\" | \"HIGH\"}\nErrors: INCIDENT_CLOSED",
+        "operationId": "classify_incident_api_v1_hub_incidents__incident_id__classify_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Incident Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClassifyIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hub/incidents/{incident_id}/respond": {
+      "post": {
+        "tags": [
+          "hub: incidents"
+        ],
+        "summary": "Respond Incident",
+        "description": "Answer the driver (BR14). Errors: INCIDENT_NOT_CLASSIFIED.",
+        "operationId": "respond_incident_api_v1_hub_incidents__incident_id__respond_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Incident Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RespondIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hub/incidents/{incident_id}/candidates": {
+      "get": {
+        "tags": [
+          "hub: incidents"
+        ],
+        "summary": "List Candidates",
+        "description": "Replacement drivers around the incident location (UC-04).",
+        "operationId": "list_candidates_api_v1_hub_incidents__incident_id__candidates_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Incident Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CandidateOut"
+                  },
+                  "title": "Response List Candidates Api V1 Hub Incidents  Incident Id  Candidates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hub/incidents/{incident_id}/resolve": {
+      "post": {
+        "tags": [
+          "hub: incidents"
+        ],
+        "summary": "Resolve Incident",
+        "description": "Apply a solution (BR15).\n\nInputs: {\"solution\": \"ROUTE_SUGGESTED\", \"stop_ids\": [...]}\n        {\"solution\": \"DRIVER_REASSIGNMENT\", \"driver_id\", \"order_ids\": [...] | null}\n        {\"solution\": \"HOLD_AT_HUB\", \"note\"}\nErrors: INCIDENT_NOT_CLASSIFIED, RESPONSE_REQUIRED, INCIDENT_CLOSED,\n        DRIVER_NOT_AVAILABLE, DRIVER_BUSY",
+        "operationId": "resolve_incident_api_v1_hub_incidents__incident_id__resolve_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Incident Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/files": {
+      "post": {
+        "tags": [
+          "files"
+        ],
+        "summary": "Upload File",
+        "description": "Upload one image (multipart field `file`).\n\nErrors: FILE_TYPE (only JPEG/PNG/WebP), FILE_TOO_LARGE (> 5 MB), FILE_EMPTY\nOutputs: {\"id\", \"url\", \"mime\", \"size_bytes\"}",
+        "operationId": "upload_file_api_v1_files_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_file_api_v1_files_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/files/{file_id}": {
+      "get": {
+        "tags": [
+          "files"
+        ],
+        "summary": "Get File",
+        "operationId": "get_file_api_v1_files__file_id__get",
+        "parameters": [
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "File Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/users": {
       "get": {
         "tags": [
@@ -1891,10 +3620,110 @@
           }
         }
       }
+    },
+    "/api/v1/sim/track/{waybill_code}": {
+      "get": {
+        "tags": [
+          "simulator"
+        ],
+        "summary": "Track Order",
+        "description": "Customer tracking page (S-03), public: timeline, ETA, delay reason and apology.\n\nErrors: ORDER_NOT_FOUND",
+        "operationId": "track_order_api_v1_sim_track__waybill_code__get",
+        "parameters": [
+          {
+            "name": "waybill_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Waybill Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AttemptOut": {
+        "properties": {
+          "outcome": {
+            "$ref": "#/components/schemas/AttemptOutcome"
+          },
+          "failure_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FailureReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "attempted_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Attempted At"
+          },
+          "photo_urls": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Photo Urls"
+          }
+        },
+        "type": "object",
+        "required": [
+          "outcome",
+          "failure_reason",
+          "note",
+          "attempted_at",
+          "photo_urls"
+        ],
+        "title": "AttemptOut"
+      },
+      "AttemptOutcome": {
+        "type": "string",
+        "enum": [
+          "DELIVERED",
+          "FAILED"
+        ],
+        "title": "AttemptOutcome"
+      },
       "AvailabilityIn": {
         "properties": {
           "online": {
@@ -1920,6 +3749,20 @@
         ],
         "title": "AvailabilityOut"
       },
+      "Body_upload_file_api_v1_files_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_file_api_v1_files_post"
+      },
       "CancelIn": {
         "properties": {
           "reason": {
@@ -1931,6 +3774,76 @@
         },
         "type": "object",
         "title": "CancelIn"
+      },
+      "CandidateOut": {
+        "properties": {
+          "driver_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Driver Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "distance_km": {
+            "type": "number",
+            "title": "Distance Km"
+          },
+          "active_orders": {
+            "type": "integer",
+            "title": "Active Orders"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "lng": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lng"
+          }
+        },
+        "type": "object",
+        "required": [
+          "driver_id",
+          "name",
+          "phone",
+          "distance_km",
+          "active_orders",
+          "score",
+          "lat",
+          "lng"
+        ],
+        "title": "CandidateOut"
       },
       "ChangePasswordIn": {
         "properties": {
@@ -1949,6 +3862,157 @@
           "new_password"
         ],
         "title": "ChangePasswordIn"
+      },
+      "ClassifyIn": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/IncidentCategory"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/IncidentPriority"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "priority"
+        ],
+        "title": "ClassifyIn"
+      },
+      "DashboardOut": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "by_status": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By Status"
+          },
+          "at_risk": {
+            "type": "integer",
+            "title": "At Risk"
+          },
+          "delivered_today": {
+            "type": "integer",
+            "title": "Delivered Today"
+          },
+          "on_time_rate_today": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "On Time Rate Today"
+          },
+          "open_incidents": {
+            "type": "integer",
+            "title": "Open Incidents"
+          },
+          "high_priority_incidents": {
+            "type": "integer",
+            "title": "High Priority Incidents"
+          },
+          "drivers_online": {
+            "type": "integer",
+            "title": "Drivers Online"
+          },
+          "drivers_on_shift": {
+            "type": "integer",
+            "title": "Drivers On Shift"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "total",
+          "by_status",
+          "at_risk",
+          "delivered_today",
+          "on_time_rate_today",
+          "open_incidents",
+          "high_priority_incidents",
+          "drivers_online",
+          "drivers_on_shift"
+        ],
+        "title": "DashboardOut"
+      },
+      "DeclineIn": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "title": "DeclineIn"
+      },
+      "DeliverIn": {
+        "properties": {
+          "photo_file_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Photo File Ids"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "lng": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lng"
+          }
+        },
+        "type": "object",
+        "title": "DeliverIn"
       },
       "DemoLoginIn": {
         "properties": {
@@ -1969,6 +4033,344 @@
           "OFFLINE"
         ],
         "title": "DriverAvailability"
+      },
+      "DriverBrief": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "lng": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lng"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "phone",
+          "lat",
+          "lng"
+        ],
+        "title": "DriverBrief"
+      },
+      "DriverOrderDetailOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "waybill_code": {
+            "type": "string",
+            "title": "Waybill Code"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/OrderPriority"
+          },
+          "recipient_name": {
+            "type": "string",
+            "title": "Recipient Name"
+          },
+          "recipient_phone": {
+            "type": "string",
+            "title": "Recipient Phone"
+          },
+          "delivery_address": {
+            "type": "string",
+            "title": "Delivery Address"
+          },
+          "delivery_lat": {
+            "type": "number",
+            "title": "Delivery Lat"
+          },
+          "delivery_lng": {
+            "type": "number",
+            "title": "Delivery Lng"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "weight_kg": {
+            "type": "string",
+            "title": "Weight Kg"
+          },
+          "cod_amount": {
+            "type": "string",
+            "title": "Cod Amount"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "promised_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Promised At"
+          },
+          "current_eta": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Eta"
+          },
+          "eta_is_estimate": {
+            "type": "boolean",
+            "title": "Eta Is Estimate"
+          },
+          "handover_from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Handover From"
+          },
+          "active_incident_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Incident Id"
+          },
+          "stop_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stop Id"
+          },
+          "timeline": {
+            "items": {
+              "$ref": "#/components/schemas/TimelineEventOut"
+            },
+            "type": "array",
+            "title": "Timeline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "waybill_code",
+          "status",
+          "priority",
+          "recipient_name",
+          "recipient_phone",
+          "delivery_address",
+          "delivery_lat",
+          "delivery_lng",
+          "items",
+          "weight_kg",
+          "cod_amount",
+          "note",
+          "promised_at",
+          "current_eta",
+          "eta_is_estimate",
+          "handover_from",
+          "active_incident_id",
+          "stop_id",
+          "timeline"
+        ],
+        "title": "DriverOrderDetailOut"
+      },
+      "DriverOrderOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "waybill_code": {
+            "type": "string",
+            "title": "Waybill Code"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/OrderPriority"
+          },
+          "recipient_name": {
+            "type": "string",
+            "title": "Recipient Name"
+          },
+          "recipient_phone": {
+            "type": "string",
+            "title": "Recipient Phone"
+          },
+          "delivery_address": {
+            "type": "string",
+            "title": "Delivery Address"
+          },
+          "delivery_lat": {
+            "type": "number",
+            "title": "Delivery Lat"
+          },
+          "delivery_lng": {
+            "type": "number",
+            "title": "Delivery Lng"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "weight_kg": {
+            "type": "string",
+            "title": "Weight Kg"
+          },
+          "cod_amount": {
+            "type": "string",
+            "title": "Cod Amount"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "promised_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Promised At"
+          },
+          "current_eta": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Eta"
+          },
+          "eta_is_estimate": {
+            "type": "boolean",
+            "title": "Eta Is Estimate"
+          },
+          "handover_from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Handover From"
+          },
+          "active_incident_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Incident Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "waybill_code",
+          "status",
+          "priority",
+          "recipient_name",
+          "recipient_phone",
+          "delivery_address",
+          "delivery_lat",
+          "delivery_lng",
+          "items",
+          "weight_kg",
+          "cod_amount",
+          "note",
+          "promised_at",
+          "current_eta",
+          "eta_is_estimate",
+          "handover_from",
+          "active_incident_id"
+        ],
+        "title": "DriverOrderOut"
       },
       "DriverProfileOut": {
         "properties": {
@@ -2051,6 +4453,125 @@
           "delivered_today"
         ],
         "title": "DriverTodayOut"
+      },
+      "EtaIn": {
+        "properties": {
+          "eta": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Eta"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 3,
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "eta",
+          "reason"
+        ],
+        "title": "EtaIn"
+      },
+      "FailIn": {
+        "properties": {
+          "reason": {
+            "$ref": "#/components/schemas/FailureReason"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "proposed_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Date"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "lng": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lng"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "title": "FailIn"
+      },
+      "FailureReason": {
+        "type": "string",
+        "enum": [
+          "CUSTOMER_REFUSED",
+          "CUSTOMER_UNREACHABLE",
+          "CUSTOMER_ABSENT",
+          "WRONG_ADDRESS",
+          "OTHER"
+        ],
+        "title": "FailureReason"
+      },
+      "FileOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "mime": {
+            "type": "string",
+            "title": "Mime"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "title": "Size Bytes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "url",
+          "mime",
+          "size_bytes"
+        ],
+        "title": "FileOut"
       },
       "ForgotPasswordIn": {
         "properties": {
@@ -2148,6 +4669,453 @@
         ],
         "title": "HealthOut"
       },
+      "HeartbeatIn": {
+        "properties": {
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 90.0,
+                "minimum": -90.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "lng": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 180.0,
+                "minimum": -180.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lng"
+          },
+          "accuracy_m": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accuracy M"
+          }
+        },
+        "type": "object",
+        "title": "HeartbeatIn"
+      },
+      "HoldIn": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 3,
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "title": "HoldIn"
+      },
+      "HubDriverRow": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "availability": {
+            "$ref": "#/components/schemas/DriverAvailability"
+          },
+          "last_seen_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Seen At"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "lng": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lng"
+          },
+          "active_orders": {
+            "type": "integer",
+            "title": "Active Orders"
+          },
+          "shift_today": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shift Today"
+          },
+          "has_pending_offer": {
+            "type": "boolean",
+            "title": "Has Pending Offer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "phone",
+          "availability",
+          "last_seen_at",
+          "lat",
+          "lng",
+          "active_orders",
+          "shift_today",
+          "has_pending_offer"
+        ],
+        "title": "HubDriverRow"
+      },
+      "HubOrderDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "waybill_code": {
+            "type": "string",
+            "title": "Waybill Code"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/OrderPriority"
+          },
+          "recipient_name": {
+            "type": "string",
+            "title": "Recipient Name"
+          },
+          "delivery_address": {
+            "type": "string",
+            "title": "Delivery Address"
+          },
+          "driver_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driver Id"
+          },
+          "driver_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driver Name"
+          },
+          "promised_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Promised At"
+          },
+          "current_eta": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Eta"
+          },
+          "at_risk": {
+            "type": "boolean",
+            "title": "At Risk"
+          },
+          "has_incident": {
+            "type": "boolean",
+            "title": "Has Incident"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "recipient_phone": {
+            "type": "string",
+            "title": "Recipient Phone"
+          },
+          "delivery_lat": {
+            "type": "number",
+            "title": "Delivery Lat"
+          },
+          "delivery_lng": {
+            "type": "number",
+            "title": "Delivery Lng"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "weight_kg": {
+            "type": "string",
+            "title": "Weight Kg"
+          },
+          "cod_amount": {
+            "type": "string",
+            "title": "Cod Amount"
+          },
+          "eta_is_estimate": {
+            "type": "boolean",
+            "title": "Eta Is Estimate"
+          },
+          "driver": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DriverBrief"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "handover_from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Handover From"
+          },
+          "incident_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Incident Id"
+          },
+          "hub_lat": {
+            "type": "number",
+            "title": "Hub Lat"
+          },
+          "hub_lng": {
+            "type": "number",
+            "title": "Hub Lng"
+          },
+          "timeline": {
+            "items": {
+              "$ref": "#/components/schemas/TimelineEventOut"
+            },
+            "type": "array",
+            "title": "Timeline"
+          },
+          "attempts": {
+            "items": {
+              "$ref": "#/components/schemas/AttemptOut"
+            },
+            "type": "array",
+            "title": "Attempts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "waybill_code",
+          "status",
+          "priority",
+          "recipient_name",
+          "delivery_address",
+          "driver_id",
+          "driver_name",
+          "promised_at",
+          "current_eta",
+          "at_risk",
+          "has_incident",
+          "created_at",
+          "recipient_phone",
+          "delivery_lat",
+          "delivery_lng",
+          "items",
+          "weight_kg",
+          "cod_amount",
+          "eta_is_estimate",
+          "driver",
+          "handover_from",
+          "incident_id",
+          "hub_lat",
+          "hub_lng",
+          "timeline",
+          "attempts"
+        ],
+        "title": "HubOrderDetail"
+      },
+      "HubOrderRow": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "waybill_code": {
+            "type": "string",
+            "title": "Waybill Code"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/OrderPriority"
+          },
+          "recipient_name": {
+            "type": "string",
+            "title": "Recipient Name"
+          },
+          "delivery_address": {
+            "type": "string",
+            "title": "Delivery Address"
+          },
+          "driver_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driver Id"
+          },
+          "driver_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driver Name"
+          },
+          "promised_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Promised At"
+          },
+          "current_eta": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Eta"
+          },
+          "at_risk": {
+            "type": "boolean",
+            "title": "At Risk"
+          },
+          "has_incident": {
+            "type": "boolean",
+            "title": "Has Incident"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "waybill_code",
+          "status",
+          "priority",
+          "recipient_name",
+          "delivery_address",
+          "driver_id",
+          "driver_name",
+          "promised_at",
+          "current_eta",
+          "at_risk",
+          "has_incident",
+          "created_at"
+        ],
+        "title": "HubOrderRow"
+      },
       "HubOut": {
         "properties": {
           "id": {
@@ -2191,6 +5159,485 @@
           "lng"
         ],
         "title": "HubOut"
+      },
+      "IncidentCategory": {
+        "type": "string",
+        "enum": [
+          "OBJECTIVE",
+          "SUBJECTIVE"
+        ],
+        "title": "IncidentCategory"
+      },
+      "IncidentListItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "type": {
+            "$ref": "#/components/schemas/IncidentType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/IncidentStatus"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IncidentPriority"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IncidentCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "driver_name": {
+            "type": "string",
+            "title": "Driver Name"
+          },
+          "order_count": {
+            "type": "integer",
+            "title": "Order Count"
+          },
+          "reported_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Reported At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "type",
+          "status",
+          "priority",
+          "category",
+          "description",
+          "driver_name",
+          "order_count",
+          "reported_at"
+        ],
+        "title": "IncidentListItem"
+      },
+      "IncidentOrderOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "waybill_code": {
+            "type": "string",
+            "title": "Waybill Code"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/OrderPriority"
+          },
+          "recipient_name": {
+            "type": "string",
+            "title": "Recipient Name"
+          },
+          "delivery_address": {
+            "type": "string",
+            "title": "Delivery Address"
+          },
+          "promised_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Promised At"
+          },
+          "current_eta": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Eta"
+          },
+          "current_driver_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Driver Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "waybill_code",
+          "status",
+          "priority",
+          "recipient_name",
+          "delivery_address",
+          "promised_at",
+          "current_eta",
+          "current_driver_name"
+        ],
+        "title": "IncidentOrderOut"
+      },
+      "IncidentOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "type": {
+            "$ref": "#/components/schemas/IncidentType"
+          },
+          "source": {
+            "$ref": "#/components/schemas/IncidentSource"
+          },
+          "status": {
+            "$ref": "#/components/schemas/IncidentStatus"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "suggested_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IncidentCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IncidentCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IncidentPriority"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hub_response": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hub Response"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "lng": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lng"
+          },
+          "reported_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Reported At"
+          },
+          "classified_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classified At"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "driver": {
+            "$ref": "#/components/schemas/PersonOut"
+          },
+          "handled_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Handled By"
+          },
+          "photo_urls": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Photo Urls"
+          },
+          "orders": {
+            "items": {
+              "$ref": "#/components/schemas/IncidentOrderOut"
+            },
+            "type": "array",
+            "title": "Orders"
+          },
+          "resolutions": {
+            "items": {
+              "$ref": "#/components/schemas/ResolutionOut"
+            },
+            "type": "array",
+            "title": "Resolutions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "type",
+          "source",
+          "status",
+          "description",
+          "suggested_category",
+          "category",
+          "priority",
+          "hub_response",
+          "lat",
+          "lng",
+          "reported_at",
+          "classified_at",
+          "resolved_at",
+          "driver",
+          "handled_by",
+          "photo_urls",
+          "orders",
+          "resolutions"
+        ],
+        "title": "IncidentOut"
+      },
+      "IncidentPriority": {
+        "type": "string",
+        "enum": [
+          "HIGH",
+          "MEDIUM",
+          "LOW"
+        ],
+        "title": "IncidentPriority"
+      },
+      "IncidentReportIn": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/IncidentType"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 10,
+            "title": "Description"
+          },
+          "photo_file_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Photo File Ids"
+          },
+          "order_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Ids"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 90.0,
+                "minimum": -90.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "lng": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 180.0,
+                "minimum": -180.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lng"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "description"
+        ],
+        "title": "IncidentReportIn",
+        "description": "Driver report (D-11). Type, description and at least one photo are required."
+      },
+      "IncidentSource": {
+        "type": "string",
+        "enum": [
+          "DRIVER",
+          "SYSTEM"
+        ],
+        "title": "IncidentSource"
+      },
+      "IncidentStatus": {
+        "type": "string",
+        "enum": [
+          "OPEN",
+          "IN_REVIEW",
+          "RESOLVING",
+          "RESOLVED",
+          "CLOSED_NO_ACTION"
+        ],
+        "title": "IncidentStatus"
+      },
+      "IncidentSummaryOut": {
+        "properties": {
+          "open": {
+            "type": "integer",
+            "title": "Open"
+          },
+          "in_review": {
+            "type": "integer",
+            "title": "In Review"
+          },
+          "resolving": {
+            "type": "integer",
+            "title": "Resolving"
+          },
+          "resolved_today": {
+            "type": "integer",
+            "title": "Resolved Today"
+          },
+          "by_priority": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By Priority"
+          },
+          "by_type_30d": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By Type 30D"
+          }
+        },
+        "type": "object",
+        "required": [
+          "open",
+          "in_review",
+          "resolving",
+          "resolved_today",
+          "by_priority",
+          "by_type_30d"
+        ],
+        "title": "IncidentSummaryOut"
+      },
+      "IncidentType": {
+        "type": "string",
+        "enum": [
+          "TRAFFIC_JAM",
+          "WEATHER",
+          "TRAFFIC_ACCIDENT",
+          "VEHICLE_BREAKDOWN",
+          "HEALTH",
+          "GOODS_DAMAGED",
+          "OTHER",
+          "ETA_ANOMALY",
+          "DRIVER_IDLE"
+        ],
+        "title": "IncidentType"
       },
       "LoginIn": {
         "properties": {
@@ -2505,6 +5952,88 @@
         "type": "object",
         "title": "MeUpdateIn"
       },
+      "OfferOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "seconds_left": {
+            "type": "integer",
+            "title": "Seconds Left"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "is_rescue": {
+            "type": "boolean",
+            "title": "Is Rescue"
+          },
+          "order_count": {
+            "type": "integer",
+            "title": "Order Count"
+          },
+          "waybill_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Waybill Codes"
+          },
+          "pickup_label": {
+            "type": "string",
+            "title": "Pickup Label"
+          },
+          "delivery_addresses": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Delivery Addresses"
+          },
+          "distance_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance Km"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/OrderPriority"
+          },
+          "cod_total": {
+            "type": "string",
+            "title": "Cod Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "expires_at",
+          "seconds_left",
+          "source",
+          "is_rescue",
+          "order_count",
+          "waybill_codes",
+          "pickup_label",
+          "delivery_addresses",
+          "distance_km",
+          "priority",
+          "cod_total"
+        ],
+        "title": "OfferOut"
+      },
       "OrderItemIn": {
         "properties": {
           "name": {
@@ -2526,6 +6055,24 @@
           "qty"
         ],
         "title": "OrderItemIn"
+      },
+      "OrderItemOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "qty": {
+            "type": "integer",
+            "title": "Qty"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "qty"
+        ],
+        "title": "OrderItemOut"
       },
       "OrderPriority": {
         "type": "string",
@@ -2596,6 +6143,68 @@
           "resend_available_at"
         ],
         "title": "OtpSentOut"
+      },
+      "Page_HubOrderRow_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/HubOrderRow"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "Page[HubOrderRow]"
+      },
+      "Page_IncidentListItem_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/IncidentListItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "Page[IncidentListItem]"
       },
       "Page_SimOrderOut_": {
         "properties": {
@@ -3024,6 +6633,37 @@
         ],
         "title": "PermissionOut"
       },
+      "PersonOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "phone"
+        ],
+        "title": "PersonOut"
+      },
       "RandomOrdersIn": {
         "properties": {
           "hub_code": {
@@ -3050,6 +6690,20 @@
           "hub_code"
         ],
         "title": "RandomOrdersIn"
+      },
+      "ReassignIn": {
+        "properties": {
+          "driver_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Driver Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "driver_id"
+        ],
+        "title": "ReassignIn"
       },
       "RegisterDriverIn": {
         "properties": {
@@ -3166,6 +6820,21 @@
         ],
         "title": "RegistrationOut"
       },
+      "ReleaseIn": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 3,
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "title": "ReleaseIn"
+      },
       "ResendOtpIn": {
         "properties": {
           "phone": {
@@ -3206,6 +6875,151 @@
           "new_password"
         ],
         "title": "ResetPasswordIn"
+      },
+      "ResolutionOut": {
+        "properties": {
+          "solution": {
+            "$ref": "#/components/schemas/ResolutionSolution"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ResolutionStatus"
+          },
+          "new_driver_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Driver Name"
+          },
+          "decided_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Decided At"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "solution",
+          "status",
+          "new_driver_name",
+          "decided_at",
+          "note"
+        ],
+        "title": "ResolutionOut"
+      },
+      "ResolutionSolution": {
+        "type": "string",
+        "enum": [
+          "ROUTE_SUGGESTED",
+          "DRIVER_REASSIGNMENT",
+          "HOLD_AT_HUB"
+        ],
+        "title": "ResolutionSolution"
+      },
+      "ResolutionStatus": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "DONE",
+          "FAILED"
+        ],
+        "title": "ResolutionStatus"
+      },
+      "ResolveIn": {
+        "properties": {
+          "solution": {
+            "$ref": "#/components/schemas/ResolutionSolution"
+          },
+          "driver_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driver Id"
+          },
+          "order_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Ids"
+          },
+          "stop_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stop Ids"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "solution"
+        ],
+        "title": "ResolveIn"
+      },
+      "RespondIn": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 3,
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "RespondIn"
       },
       "RoleCode": {
         "type": "string",
@@ -3270,6 +7084,111 @@
           "user_count"
         ],
         "title": "RoleOut"
+      },
+      "RouteOut": {
+        "properties": {
+          "hub_name": {
+            "type": "string",
+            "title": "Hub Name"
+          },
+          "hub_lat": {
+            "type": "number",
+            "title": "Hub Lat"
+          },
+          "hub_lng": {
+            "type": "number",
+            "title": "Hub Lng"
+          },
+          "driver_lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driver Lat"
+          },
+          "driver_lng": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driver Lng"
+          },
+          "to_pick_up": {
+            "items": {
+              "$ref": "#/components/schemas/DriverOrderOut"
+            },
+            "type": "array",
+            "title": "To Pick Up"
+          },
+          "ready_to_start": {
+            "type": "integer",
+            "title": "Ready To Start"
+          },
+          "stops": {
+            "items": {
+              "$ref": "#/components/schemas/StopOut"
+            },
+            "type": "array",
+            "title": "Stops"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hub_name",
+          "hub_lat",
+          "hub_lng",
+          "driver_lat",
+          "driver_lng",
+          "to_pick_up",
+          "ready_to_start",
+          "stops"
+        ],
+        "title": "RouteOut"
+      },
+      "ScanIn": {
+        "properties": {
+          "waybill_code": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 4,
+            "title": "Waybill Code"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "lng": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lng"
+          }
+        },
+        "type": "object",
+        "required": [
+          "waybill_code"
+        ],
+        "title": "ScanIn"
       },
       "ShiftCode": {
         "type": "string",
@@ -3539,6 +7458,98 @@
         ],
         "title": "SlotStatus"
       },
+      "StartOut": {
+        "properties": {
+          "started": {
+            "type": "integer",
+            "title": "Started"
+          }
+        },
+        "type": "object",
+        "required": [
+          "started"
+        ],
+        "title": "StartOut"
+      },
+      "StopOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StopStatus"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lng": {
+            "type": "number",
+            "title": "Lng"
+          },
+          "recipient_name": {
+            "type": "string",
+            "title": "Recipient Name"
+          },
+          "recipient_phone": {
+            "type": "string",
+            "title": "Recipient Phone"
+          },
+          "eta": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eta"
+          },
+          "orders": {
+            "items": {
+              "$ref": "#/components/schemas/DriverOrderOut"
+            },
+            "type": "array",
+            "title": "Orders"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "seq",
+          "status",
+          "address",
+          "lat",
+          "lng",
+          "recipient_name",
+          "recipient_phone",
+          "eta",
+          "orders"
+        ],
+        "title": "StopOut"
+      },
+      "StopStatus": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "ARRIVED",
+          "DONE",
+          "SKIPPED"
+        ],
+        "title": "StopStatus"
+      },
       "TemporaryPasswordOut": {
         "properties": {
           "temporary_password": {
@@ -3551,6 +7562,53 @@
           "temporary_password"
         ],
         "title": "TemporaryPasswordOut"
+      },
+      "TimelineEventOut": {
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "from_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OrderStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "to_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OrderStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "at",
+          "type",
+          "from_status",
+          "to_status",
+          "payload"
+        ],
+        "title": "TimelineEventOut"
       },
       "TokenOut": {
         "properties": {
@@ -3578,6 +7636,190 @@
           "user"
         ],
         "title": "TokenOut"
+      },
+      "TrackDriverOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "phone"
+        ],
+        "title": "TrackDriverOut"
+      },
+      "TrackOut": {
+        "properties": {
+          "waybill_code": {
+            "type": "string",
+            "title": "Waybill Code"
+          },
+          "partner_order_ref": {
+            "type": "string",
+            "title": "Partner Order Ref"
+          },
+          "recipient_name": {
+            "type": "string",
+            "title": "Recipient Name"
+          },
+          "delivery_address": {
+            "type": "string",
+            "title": "Delivery Address"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "status_label": {
+            "type": "string",
+            "title": "Status Label"
+          },
+          "promised_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Promised At"
+          },
+          "eta": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eta"
+          },
+          "eta_is_estimate": {
+            "type": "boolean",
+            "title": "Eta Is Estimate"
+          },
+          "is_late": {
+            "type": "boolean",
+            "title": "Is Late"
+          },
+          "delay_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delay Message"
+          },
+          "driver": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrackDriverOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "proof_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proof Url"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/TrackStepOut"
+            },
+            "type": "array",
+            "title": "Steps"
+          }
+        },
+        "type": "object",
+        "required": [
+          "waybill_code",
+          "partner_order_ref",
+          "recipient_name",
+          "delivery_address",
+          "status",
+          "status_label",
+          "promised_at",
+          "eta",
+          "eta_is_estimate",
+          "is_late",
+          "delay_message",
+          "driver",
+          "proof_url",
+          "steps"
+        ],
+        "title": "TrackOut",
+        "description": "Customer tracking page (S-03), built only from what ShopNow received."
+      },
+      "TrackStepOut": {
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "event": {
+            "type": "string",
+            "title": "Event"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "at",
+          "event",
+          "status",
+          "title",
+          "message"
+        ],
+        "title": "TrackStepOut"
       },
       "UpdateRolePermissionsIn": {
         "properties": {

@@ -22,6 +22,7 @@ if not TEST_DATABASE_URL:
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 os.environ["DEMO_MODE"] = "true"
 os.environ["DEMO_PASSWORD"] = "Demo@12345"
+os.environ["WORKER_ENABLED"] = "false"  # tests call the job functions directly
 
 from httpx import ASGITransport, AsyncClient  # noqa: E402
 
