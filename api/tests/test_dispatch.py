@@ -1,6 +1,8 @@
 """Dispatch engine: eligibility and ranking (BR4, BR5), sequential offers with timeout
 (BR6, BR7), first acceptance wins (BR8), no driver (EX2) and hold after rounds (EX3)."""
 
+from datetime import UTC, datetime, timedelta
+
 from httpx import AsyncClient
 
 from app.modules.dispatch.service import expire_offer, rank_candidates, run_dispatch
@@ -72,7 +74,8 @@ async def test_unanswered_offer_moves_to_next_driver_then_first_accept_wins(
 
     # BR7: the timeout passes without an answer.
     await sql(
-        "update dispatch_offers set expires_at = now() - interval '5 seconds' where id = :id",
+        "update dispatch_offers set expires_at = :at where id = :id",
+        at=datetime.now(UTC) - timedelta(seconds=5),
         id=first[0],
     )
     assert await run_service(expire_offer, first[0]) is True
@@ -151,12 +154,12 @@ async def test_no_driver_available_retries_later(client: AsyncClient) -> None:
     order_id = await create_order(client, "DP000003")
     assert await run_service(run_dispatch, order_id) == "no_driver"
     retry = await scalar(
-        "select run_at > now() + interval '30 seconds' from jobs where type = :t "
+        "select run_at from jobs where type = :t "
         "and status = 'PENDING' and payload->>'order_id' = :o",
         t=DISPATCH_RUN,
         o=str(order_id),
     )
-    assert retry is True
+    assert retry > datetime.now(UTC) + timedelta(seconds=30)
     assert await scalar("select status from orders where id = :id", id=order_id) == (
         "AWAITING_ASSIGNMENT"
     )

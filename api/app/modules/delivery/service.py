@@ -175,7 +175,10 @@ async def route_view(session: AsyncSession, driver_id: uuid.UUID) -> RouteOut:
                 orders=[await _to_out(session, order) for order in stop_orders],
             )
         )
+    route = await today_route(session, driver_id)
     return RouteOut(
+        route_id=route.id if route else None,
+        geometry=route.polyline if route and stops else None,
         hub_name=hub.name if hub else "",
         hub_lat=hub.lat if hub else 0,
         hub_lng=hub.lng if hub else 0,

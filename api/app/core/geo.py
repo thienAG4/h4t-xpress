@@ -1,7 +1,7 @@
-"""Distance and travel-time estimates used until routing switches to OSRM (Phase 3).
+"""Distance and travel-time helpers: dispatch scoring and the ETA fallback when OSRM fails.
 
-The estimate is deliberately simple and is always flagged `eta_degraded` on orders:
-straight-line distance x road factor at an average urban speed, times a rush-hour factor.
+The fallback is deliberately simple and flags orders `eta_degraded`: straight-line
+distance x road factor at an average urban speed, times a rush-hour factor.
 """
 
 import math

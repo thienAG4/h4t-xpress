@@ -55,13 +55,16 @@ from app.modules.orders.models import (
 from app.modules.partner.models import Partner, PartnerStatus
 from app.modules.rbac.models import Permission, Role, RoleCode, RolePermission
 from app.modules.reports.models import DailyDriverStat
+from app.modules.routing.models import Route, RouteStatus, RouteStop, StopStatus
 from app.modules.settings.models import SystemSetting
-from app.modules.sim.models import SimShopnowOrder
+from app.modules.sim.models import SimShopnowOrder, SimShopnowWebhook
 from app.modules.users.models import DriverAvailability, DriverProfile, Gender, User, UserStatus
 from app.seed import catalog
 
 TZ = ZoneInfo("Asia/Ho_Chi_Minh")
 SLA_GRACE = timedelta(minutes=120)
+# Drivers 3 to 5 of every hub are already on the road today (maps, route planning, GPS).
+BUSY_POSITIONS = (2, 3, 4)
 HISTORY_OFFER_TIMEOUT = timedelta(minutes=10)
 
 Row = dict[str, Any]
@@ -130,6 +133,7 @@ class DemoDataBuilder:
             lambda: {"assigned": 0, "delivered": 0, "failed": 0, "on_time": 0, "incidents": 0}
         )
         self._driver_hub: dict[uuid.UUID, str] = {}
+        self._profiles: dict[uuid.UUID, Row] = {}
 
     # ------------------------------------------------------------------ helpers
 
@@ -180,6 +184,7 @@ class DemoDataBuilder:
         self._shift_registrations()
         self._history()
         self._orders_today()
+        self._routes_today()
         self._daily_stats()
         return self.rows
 
@@ -354,7 +359,7 @@ class DemoDataBuilder:
                 )
                 last_lat, last_lng = self.random_point(hub.seed.lat, hub.seed.lng, 1.5)
                 letter = self.rng.choice("ABCDEFGHKLMNPSTUVX")
-                self.add(
+                self._profiles[driver_id] = self.add(
                     DriverProfile,
                     {
                         "user_id": driver_id,
@@ -406,11 +411,12 @@ class DemoDataBuilder:
                     # driver1 and driver2 (first two of the first hub) always work full days,
                     # so the demo script with two driver windows works on any day.
                     is_demo_pair = hub_code == catalog.HUBS[0].code and position < 2
-                    if not is_demo_pair and self.rng.random() > 0.85:
+                    on_road_today = offset == 0 and position in BUSY_POSITIONS
+                    if not (is_demo_pair or on_road_today) and self.rng.random() > 0.85:
                         continue
                     preferred = (
                         ShiftCode.FULL_DAY
-                        if is_demo_pair
+                        if is_demo_pair or on_road_today
                         else self.rng.choices(
                             [ShiftCode.MORNING, ShiftCode.AFTERNOON, ShiftCode.FULL_DAY],
                             weights=[35, 30, 35],
@@ -1009,6 +1015,190 @@ class DemoDataBuilder:
                         "updated_at": created,
                     },
                 )
+
+    def _routes_today(self) -> None:
+        """A few drivers per hub are halfway through today's route, so the hub map, route
+        planning and the GPS simulator have something to show right after seeding."""
+        for hub in self.hubs.values():
+            drivers = self.drivers_by_hub[hub.seed.code]
+            for index, position in enumerate(BUSY_POSITIONS):
+                if position < len(drivers):
+                    self._busy_route(hub, drivers[position], first_done=index == 0)
+
+    def _busy_route(self, hub: HubInfo, driver: DriverInfo, *, first_done: bool) -> None:
+        rng = self.rng
+        started = self.now - minutes(rng.randint(45, 100))
+        assigned = started - minutes(rng.randint(35, 50))
+        route_id = self.uid()
+        self.add(
+            Route,
+            {
+                "id": route_id,
+                "hub_id": hub.id,
+                "driver_id": driver.id,
+                "work_date": self.today,
+                "status": RouteStatus.IN_PROGRESS,
+                "polyline": None,
+                "total_distance_m": None,
+                "total_duration_s": None,
+                "published_at": assigned,
+                "started_at": started,
+                "completed_at": None,
+                "created_at": assigned,
+                "updated_at": started,
+            },
+        )
+        orders: list[Row] = []
+        for _ in range(rng.choice([3, 4])):
+            created = assigned - minutes(rng.randint(20, 90))
+            express = rng.random() < 0.2
+            promised = created + timedelta(
+                hours=rng.uniform(4, 5) if express else rng.uniform(6, 8)
+            )
+            order = self._new_order(hub, self.today, created, promised, express)
+            self._event(order, created, None, OrderStatus.AWAITING_ASSIGNMENT, ActorType.PARTNER)
+            self._offers(order, driver, [driver], assigned, round_no=1)
+            self._assign(order, driver, assigned)
+            picked = assigned + minutes(rng.randint(10, 25))
+            self._event(order, picked, OrderStatus.ASSIGNED, OrderStatus.PICKED_UP,
+                        ActorType.USER, driver.id, lat=hub.seed.lat, lng=hub.seed.lng)  # fmt: skip
+            self._event(order, started, OrderStatus.PICKED_UP, OrderStatus.OUT_FOR_DELIVERY,
+                        ActorType.USER, driver.id)  # fmt: skip
+            orders.append(order)
+
+        # Visit stops nearest first, as the driver would.
+        here = (hub.seed.lat, hub.seed.lng)
+        ordered: list[Row] = []
+        remaining = orders[:]
+        while remaining:
+            closest = min(
+                remaining,
+                key=lambda o: math.dist(here, (o["delivery_lat"], o["delivery_lng"])),
+            )
+            ordered.append(closest)
+            remaining.remove(closest)
+            here = (closest["delivery_lat"], closest["delivery_lng"])
+
+        if first_done:
+            self._attempt(ordered[0], driver, started + minutes(rng.randint(15, 30)), success=True)
+        pending = [o for o in ordered if o["status"] == OrderStatus.OUT_FOR_DELIVERY]
+        # The driver is part of the way to the next stop.
+        last = ordered[0] if first_done else None
+        origin = (
+            (last["delivery_lat"], last["delivery_lng"]) if last else (hub.seed.lat, hub.seed.lng)
+        )
+        target = (pending[0]["delivery_lat"], pending[0]["delivery_lng"])
+        share = rng.uniform(0.3, 0.6)
+        position = (
+            round(origin[0] + (target[0] - origin[0]) * share, 6),
+            round(origin[1] + (target[1] - origin[1]) * share, 6),
+        )
+        profile = self._profiles[driver.id]
+        profile["last_lat"], profile["last_lng"] = position
+
+        clock = self.now
+        here = position
+        for seq, order in enumerate(ordered, start=1):
+            stop_id = self.uid()
+            done = order["status"] == OrderStatus.DELIVERED
+            eta = order["delivered_at"] if done else None
+            if not done:
+                point = (order["delivery_lat"], order["delivery_lng"])
+                km = math.dist(here, point) * 111.0
+                clock += minutes(km * 1.4 / 25 * 60 * 1.1)
+                eta = clock
+                clock += minutes(5)
+                here = point
+                order["current_eta"] = eta
+                order["eta_source"] = EtaSource.SYSTEM
+                order["eta_degraded"] = True
+            order["route_stop_id"] = stop_id
+            self.add(
+                RouteStop,
+                {
+                    "id": stop_id,
+                    "route_id": route_id,
+                    "seq": seq,
+                    "address": order["delivery_address"],
+                    "lat": order["delivery_lat"],
+                    "lng": order["delivery_lng"],
+                    "recipient_name": order["recipient_name"],
+                    "recipient_phone": order["recipient_phone"],
+                    "eta": eta,
+                    "status": StopStatus.DONE if done else StopStatus.PENDING,
+                    "arrived_at": order["delivered_at"] if done else None,
+                    "created_at": assigned,
+                    "updated_at": started,
+                },
+            )
+            self._shop_record(hub, order, driver)
+
+    def _shop_record(self, hub: HubInfo, order: Row, driver: DriverInfo) -> None:
+        """ShopNow's copy of an order, with the webhooks it would have received."""
+        self.add(
+            SimShopnowOrder,
+            {
+                "id": self.uid(),
+                "waybill_code": order["waybill_code"],
+                "partner_order_ref": order["partner_order_ref"],
+                "payload": {
+                    "waybill_code": order["waybill_code"],
+                    "hub_code": hub.seed.code,
+                    "recipient_name": order["recipient_name"],
+                    "recipient_phone": order["recipient_phone"],
+                    "delivery_address": order["delivery_address"],
+                    "delivery_lat": order["delivery_lat"],
+                    "delivery_lng": order["delivery_lng"],
+                    "weight_kg": str(order["weight_kg"]),
+                    "cod_amount": str(order["cod_amount"]),
+                    "items": order["items"],
+                    "priority": order["priority"].value,
+                    "promised_at": order["promised_at"].isoformat(),
+                },
+                "last_status": order["status"].value,
+                "current_eta": order["current_eta"],
+                "last_event_at": order["updated_at"],
+                "created_at": order["created_at"],
+                "updated_at": order["updated_at"],
+            },
+        )
+        events = [
+            row
+            for row in self.rows[OrderEvent]
+            if row["order_id"] == order["id"] and row["to_status"] is not None
+        ]
+        name = next(row["full_name"] for row in self.rows[User] if row["id"] == driver.id)
+        phone = next(row["phone"] for row in self.rows[User] if row["id"] == driver.id)
+        for event in events[1:]:
+            status = event["to_status"]
+            kind = {
+                OrderStatus.ASSIGNED: "order.driver_assigned",
+                OrderStatus.DELIVERED: "order.delivered",
+            }.get(status, "order.status_changed")
+            payload: dict[str, Any] = {
+                "event": kind,
+                "waybill_code": order["waybill_code"],
+                "partner_order_ref": order["partner_order_ref"],
+                "status": status.value,
+                "eta": order["current_eta"].isoformat() if order["current_eta"] else None,
+                "eta_is_estimate": True,
+                "promised_at": order["promised_at"].isoformat(),
+            }
+            if status == OrderStatus.ASSIGNED:
+                payload["driver"] = {"name": name, "phone": phone}
+            if status == OrderStatus.OUT_FOR_DELIVERY:
+                payload["message"] = "Your parcel is on its way."
+            self.add(
+                SimShopnowWebhook,
+                {
+                    "id": self.uid(),
+                    "event_type": kind,
+                    "waybill_code": order["waybill_code"],
+                    "payload": payload,
+                    "signature_valid": True,
+                    "received_at": event["created_at"] + timedelta(seconds=3),
+                },
+            )
 
     def _daily_stats(self) -> None:
         for (driver_id, day), counters in sorted(

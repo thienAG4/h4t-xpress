@@ -239,8 +239,15 @@ def default_settings(demo_mode: bool) -> list[tuple[str, object, str]]:
         ("shift.max_days_ahead", 7, "How far ahead drivers can register"),
         ("anomaly.eta_increase_count", 3, "Consecutive ETA increases that raise ETA_ANOMALY"),
         ("anomaly.eta_increase_total_min", 30, "Total ETA increase that raises ETA_ANOMALY"),
-        ("anomaly.idle_minutes", 15, "Minutes without movement that raise DRIVER_IDLE"),
+        (
+            "anomaly.idle_minutes",
+            3 if demo_mode else 15,
+            "Minutes without movement that raise DRIVER_IDLE (short in the demo)",
+        ),
         ("anomaly.idle_radius_m", 50, "Movement below this radius counts as idle"),
+        ("sim.gps_enabled", demo_mode, "GPS simulator moves drivers on the road (demo only)"),
+        ("sim.speed_factor", 4, "Simulated drivers move this many times faster than real time"),
+        ("sim.paused_drivers", {}, "Drivers stopped by the traffic-jam scenario, until when"),
     ]
 
 

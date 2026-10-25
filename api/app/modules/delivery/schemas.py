@@ -68,6 +68,8 @@ class StopOut(BaseModel):
 
 
 class RouteOut(BaseModel):
+    route_id: uuid.UUID | None
+    geometry: str | None  # encoded polyline of the remaining path (OSRM), null when estimated
     hub_name: str
     hub_lat: float
     hub_lng: float

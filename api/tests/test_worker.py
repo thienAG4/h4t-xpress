@@ -2,6 +2,7 @@
 jobs left RUNNING by a crashed process are picked up again."""
 
 import uuid
+from datetime import UTC, datetime, timedelta
 
 from httpx import AsyncClient
 
@@ -42,10 +43,12 @@ async def test_failing_job_is_retried_then_marked_failed() -> None:
     await run_due_jobs()
     status, attempts, error = await _job(job_id)
     assert (status, attempts) == ("PENDING", 1) and error and "NotFound" in error
-    assert await scalar("select run_at > now() from jobs where id = :id", id=job_id)
+    run_at = await scalar("select run_at from jobs where id = :id", id=job_id)
+    assert run_at > datetime.now(UTC)
 
     await sql(
-        "update jobs set attempts = :n, run_at = now() where id = :id",
+        "update jobs set attempts = :n, run_at = :at where id = :id",
+        at=datetime.now(UTC) - timedelta(seconds=1),
         n=MAX_JOB_ATTEMPTS - 1,
         id=job_id,
     )

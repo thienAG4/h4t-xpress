@@ -1,12 +1,15 @@
-"""Driver presence (heartbeat, GPS) and ETA estimates for each driver's route.
+"""Driver presence (heartbeat, GPS) and ETA estimates for each driver's route (SPEC §3.3).
 
-Until OSRM arrives (Phase 3) the ETA uses straight-line distance x road factor at an
-average speed with rush-hour multipliers, so every estimate is flagged `eta_degraded`.
+ETA = road duration of each leg (OSRM) x rush-hour factor + loading and service time.
+When OSRM is unavailable the road duration falls back to straight-line distance x road
+factor at an average speed, and the orders are flagged `eta_degraded` ("estimate").
 """
 
 import logging
 import uuid
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from itertools import pairwise
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,7 +20,8 @@ from app.modules.hubs.models import Hub
 from app.modules.orders.models import ActorType, EtaSource, Order, OrderEventType, OrderStatus
 from app.modules.orders.service import ACTIVE_DRIVER_STATUSES, add_event
 from app.modules.partner.webhooks import ETA_CHANGED, notify_partner
-from app.modules.routing.service import pending_stops
+from app.modules.routing.osrm import Point, RoadRoute, osrm
+from app.modules.routing.service import pending_stops, today_route
 from app.modules.settings.service import BusinessSettings
 from app.modules.tracking.models import DriverLocation
 from app.modules.users.models import DriverProfile
@@ -66,22 +70,40 @@ async def driver_position(
 # =============================== ETA ===============================
 
 
-def _minutes(
-    settings: BusinessSettings, at: datetime, a: tuple[float, float], b: tuple[float, float]
-) -> float:
-    factor = traffic_factor(at, settings.traffic_factors, settings.default_traffic_factor)
-    return travel_minutes(
-        haversine_km(*a, *b),
-        speed_kmh=settings.fallback_speed_kmh,
-        road_factor=settings.fallback_road_factor,
-        factor=factor,
-    )
+@dataclass
+class EtaPlan:
+    etas: dict[uuid.UUID, datetime] = field(default_factory=dict)
+    degraded: bool = True
+    road: RoadRoute | None = None
+
+
+async def road_leg_minutes(
+    settings: BusinessSettings, points: list[Point]
+) -> tuple[list[float], RoadRoute | None]:
+    """Free-flow minutes of each leg points[i] -> points[i + 1]; OSRM, else straight line."""
+    road = await osrm.route(points)
+    if road is not None and len(road.leg_durations_s) == len(points) - 1:
+        return [seconds / 60 for seconds in road.leg_durations_s], road
+    minutes = [
+        travel_minutes(
+            haversine_km(*a, *b),
+            speed_kmh=settings.fallback_speed_kmh,
+            road_factor=settings.fallback_road_factor,
+            factor=1.0,
+        )
+        for a, b in pairwise(points)
+    ]
+    return minutes, None
+
+
+def _with_traffic(settings: BusinessSettings, at: datetime, minutes: float) -> float:
+    return minutes * traffic_factor(at, settings.traffic_factors, settings.default_traffic_factor)
 
 
 async def estimate_driver_etas(
     session: AsyncSession, driver_id: uuid.UUID, settings: BusinessSettings
-) -> dict[uuid.UUID, datetime]:
-    """ETA per active order of the driver: pickup first if needed, then stops in order."""
+) -> EtaPlan:
+    """ETA per active order of the driver: pickups first if needed, then stops in order."""
     orders = list(
         await session.scalars(
             select(Order).where(
@@ -90,14 +112,13 @@ async def estimate_driver_etas(
         )
     )
     if not orders:
-        return {}
+        return EtaPlan()
     hub = await session.get(Hub, orders[0].hub_id)
     hub_point = (hub.lat, hub.lng) if hub else (orders[0].delivery_lat, orders[0].delivery_lng)
     position = await driver_position(session, driver_id, hub_point)
-    clock = utc_now()
 
     # Hand-over orders are collected from the previous driver, others at the hub.
-    pickups: list[tuple[float, float]] = []
+    pickups: list[Point] = []
     for order in orders:
         if order.status != OrderStatus.ASSIGNED:
             continue
@@ -106,26 +127,25 @@ async def estimate_driver_etas(
             point = await driver_position(session, order.handover_from_driver_id, hub_point)
         if point not in pickups:
             pickups.append(point)
-    for point in pickups:
-        clock += timedelta(minutes=_minutes(settings, clock, position, point) + LOADING_MINUTES)
-        position = point
-
-    etas: dict[uuid.UUID, datetime] = {}
     by_stop: dict[uuid.UUID, list[Order]] = {}
     for order in orders:
         if order.route_stop_id:
             by_stop.setdefault(order.route_stop_id, []).append(order)
-    for stop in await pending_stops(session, driver_id):
-        stop_orders = by_stop.get(stop.id, [])
-        if not stop_orders:
-            continue
-        clock += timedelta(minutes=_minutes(settings, clock, position, (stop.lat, stop.lng)))
+    stops = [stop for stop in await pending_stops(session, driver_id) if stop.id in by_stop]
+
+    points: list[Point] = [position, *pickups, *((stop.lat, stop.lng) for stop in stops)]
+    legs, road = await road_leg_minutes(settings, points)
+    plan = EtaPlan(degraded=road is None, road=road)
+    clock = utc_now()
+    for leg in legs[: len(pickups)]:
+        clock += timedelta(minutes=_with_traffic(settings, clock, leg) + LOADING_MINUTES)
+    for stop, leg in zip(stops, legs[len(pickups) :], strict=False):
+        clock += timedelta(minutes=_with_traffic(settings, clock, leg))
         stop.eta = clock
-        for order in stop_orders:
-            etas[order.id] = clock
+        for order in by_stop[stop.id]:
+            plan.etas[order.id] = clock
         clock += timedelta(minutes=settings.service_time_min)
-        position = (stop.lat, stop.lng)
-    return etas
+    return plan
 
 
 async def refresh_driver_etas(
@@ -140,16 +160,22 @@ async def refresh_driver_etas(
     Returns the orders whose ETA moved by at least `eta.notify_threshold_min` minutes.
     The caller commits.
     """
-    etas = await estimate_driver_etas(session, driver_id, settings)
+    plan = await estimate_driver_etas(session, driver_id, settings)
+    route = await today_route(session, driver_id)
+    if route is not None:
+        # Remaining path from the driver's position, drawn on the maps (D-07, H-02, H-03).
+        route.polyline = plan.road.polyline if plan.road else None
+        route.total_distance_m = round(plan.road.distance_m) if plan.road else None
+        route.total_duration_s = round(plan.road.duration_s) if plan.road else None
     changed: list[Order] = []
-    for order_id, eta in etas.items():
+    for order_id, eta in plan.etas.items():
         order = await session.get(Order, order_id)
         if order is None or order.eta_source == EtaSource.MANUAL:
             continue
         previous = order.current_eta
         order.current_eta = eta
         order.eta_source = EtaSource.SYSTEM
-        order.eta_degraded = True
+        order.eta_degraded = plan.degraded
         moved = (
             previous is None
             or abs((eta - previous).total_seconds()) >= settings.notify_threshold_min * 60

@@ -25,6 +25,10 @@ from app.core.db import SessionLocal
 from app.modules.delivery.service import release_reschedule
 from app.modules.dispatch.service import expire_offer, run_dispatch, sweep
 from app.modules.partner.webhooks import deliver_pending_webhooks
+from app.modules.sim.demo import maybe_daily_reset
+from app.modules.sim.gps import TICK_SECONDS as GPS_TICK_SECONDS
+from app.modules.sim.gps import gps
+from app.modules.tracking.anomaly import scan as anomaly_scan
 from app.worker.jobs import DISPATCH_RUN, OFFER_TIMEOUT, RESCHEDULE_RELEASE
 from app.worker.models import Job, JobStatus
 
@@ -33,6 +37,7 @@ logger = logging.getLogger(__name__)
 MAX_JOB_ATTEMPTS = 5
 RETRY_STEP = timedelta(seconds=10)
 STALE_AFTER = timedelta(minutes=5)  # a RUNNING job this old was left by a crashed process
+ANOMALY_EVERY_SECONDS = 60.0  # anomaly scan (BR12) and the daily demo reset check
 
 Handler = Callable[[AsyncSession, dict[str, Any]], Awaitable[object]]
 
@@ -166,20 +171,39 @@ class Worker:
             logger.info("[worker] sweep %s", counts)
         await deliver_pending_webhooks(client=self._http)
 
+    @staticmethod
+    async def _scan_anomalies() -> None:
+        async with SessionLocal() as session:
+            await anomaly_scan(session)
+
     async def _loop(self) -> None:
         settings = get_settings()
         loop = asyncio.get_running_loop()
-        next_periodic = 0.0
+        # (seconds between runs, task). A failing task is logged and does not stop the others.
+        schedule: list[tuple[float, Callable[[], Awaitable[object]]]] = [
+            (settings.worker_sweep_seconds, self._periodic),
+            (GPS_TICK_SECONDS, gps.tick),
+            (ANOMALY_EVERY_SECONDS, self._scan_anomalies),
+            (ANOMALY_EVERY_SECONDS, maybe_daily_reset),
+        ]
+        next_run = [0.0] * len(schedule)
         while True:
+            for index, (every, task) in enumerate(schedule):
+                if loop.time() < next_run[index]:
+                    continue
+                next_run[index] = loop.time() + every
+                try:
+                    await task()
+                except asyncio.CancelledError:
+                    raise
+                except Exception:
+                    logger.exception("[worker] %s failed", getattr(task, "__name__", task))
             try:
-                if loop.time() >= next_periodic:
-                    await self._periodic()
-                    next_periodic = loop.time() + settings.worker_sweep_seconds
                 ran = await run_due_jobs()
             except asyncio.CancelledError:
                 raise
             except Exception:
-                logger.exception("[worker] loop error")
+                logger.exception("[worker] job loop error")
                 ran = 0
             if not ran:
                 await asyncio.sleep(settings.worker_poll_seconds)

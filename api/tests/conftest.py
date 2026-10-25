@@ -23,6 +23,7 @@ os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 os.environ["DEMO_MODE"] = "true"
 os.environ["DEMO_PASSWORD"] = "Demo@12345"
 os.environ["WORKER_ENABLED"] = "false"  # tests call the job functions directly
+os.environ["OSRM_ENABLED"] = "false"  # offline and deterministic; test_osrm mocks the server
 
 from httpx import ASGITransport, AsyncClient  # noqa: E402
 

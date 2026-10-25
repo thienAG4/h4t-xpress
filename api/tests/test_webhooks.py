@@ -2,6 +2,7 @@
 backoff, and the customer tracking page built only from received webhooks (S-03)."""
 
 import uuid
+from datetime import UTC, datetime, timedelta
 
 import httpx
 from httpx import ASGITransport, AsyncClient
@@ -132,17 +133,20 @@ async def test_failed_delivery_is_retried_with_backoff_then_given_up(client: Asy
     async with AsyncClient(transport=broken) as http:
         assert await deliver_pending_webhooks(client=http) >= 1
     rows = await sql(
-        "select status, attempts, last_error, next_attempt_at > now() + interval '50 seconds' "
+        "select status, attempts, last_error, next_attempt_at "
         "from webhook_deliveries where payload->>'waybill_code' = 'WH000001'"
     )
+    soon = datetime.now(UTC) + timedelta(seconds=50)
     assert all(
-        row[0] == "PENDING" and row[1] == 1 and row[2] == "HTTP 500" and row[3] for row in rows
+        row[0] == "PENDING" and row[1] == 1 and row[2] == "HTTP 500" and row[3] > soon
+        for row in rows
     )
 
     # The last allowed attempt fails too: the delivery is marked FAILED for the ops log.
     await sql(
-        "update webhook_deliveries set attempts = 5, next_attempt_at = now() "
-        "where payload->>'waybill_code' = 'WH000001'"
+        "update webhook_deliveries set attempts = 5, next_attempt_at = :at "
+        "where payload->>'waybill_code' = 'WH000001'",
+        at=datetime.now(UTC) - timedelta(seconds=1),
     )
     async with AsyncClient(transport=broken) as http:
         await deliver_pending_webhooks(client=http)

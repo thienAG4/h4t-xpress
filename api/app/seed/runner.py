@@ -23,9 +23,12 @@ from app.models import (
     Permission,
     Role,
     RolePermission,
+    Route,
+    RouteStop,
     Shift,
     ShiftRegistration,
     SimShopnowOrder,
+    SimShopnowWebhook,
     SystemSetting,
     User,
 )
@@ -45,6 +48,8 @@ INSERT_ORDER: list[type[Base]] = [
     Partner,
     SystemSetting,
     ShiftRegistration,
+    Route,
+    RouteStop,
     Order,
     Incident,
     IncidentOrder,
@@ -55,6 +60,7 @@ INSERT_ORDER: list[type[Base]] = [
     DeliveryAttempt,
     DailyDriverStat,
     SimShopnowOrder,
+    SimShopnowWebhook,
 ]
 BATCH_SIZE = 1000
 

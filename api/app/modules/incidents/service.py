@@ -25,6 +25,7 @@ from app.modules.incidents.models import (
     IncidentOrder,
     IncidentPriority,
     IncidentResolution,
+    IncidentSource,
     IncidentStatus,
     IncidentType,
     ResolutionSolution,
@@ -74,6 +75,7 @@ SUGGESTED_CATEGORY = {
     IncidentType.VEHICLE_BREAKDOWN: IncidentCategory.SUBJECTIVE,
     IncidentType.HEALTH: IncidentCategory.SUBJECTIVE,
     IncidentType.GOODS_DAMAGED: IncidentCategory.SUBJECTIVE,
+    IncidentType.ETA_ANOMALY: IncidentCategory.OBJECTIVE,
 }
 
 # Short reason shared with the partner, plus the apology they forward to the customer.
@@ -271,6 +273,60 @@ async def report(session: AsyncSession, driver: CurrentUser, data: IncidentRepor
         {"incident_id": str(incident.id), "code": incident.code, "type": data.type.value},
     )
     return out
+
+
+# =============================== System: anomalies (BR12) ===============================
+
+
+async def raise_system_incident(
+    session: AsyncSession,
+    *,
+    driver_id: uuid.UUID,
+    hub_id: uuid.UUID,
+    kind: IncidentType,
+    description: str,
+    orders: list[Order],
+    lat: float | None = None,
+    lng: float | None = None,
+) -> Incident:
+    """Incident opened by the anomaly scan (EX5, EX6). The hub handles it like any other;
+    the orders become hub-controlled until it is resolved. Commits."""
+    express = any(order.priority == OrderPriority.EXPRESS for order in orders)
+    late = any(order.current_eta and order.current_eta > order.promised_at for order in orders)
+    incident = Incident(
+        hub_id=hub_id,
+        driver_id=driver_id,
+        type=kind,
+        source=IncidentSource.SYSTEM,
+        description=description,
+        lat=lat,
+        lng=lng,
+        suggested_category=SUGGESTED_CATEGORY.get(kind),
+        priority=IncidentPriority.HIGH if express or late else None,
+        status=IncidentStatus.OPEN,
+        reported_at=utc_now(),
+    )
+    session.add(incident)
+    await session.flush()
+    for order in orders:
+        session.add(IncidentOrder(incident_id=incident.id, order_id=order.id))
+        order.active_incident_id = incident.id
+        add_event(
+            session,
+            order,
+            OrderEventType.INCIDENT,
+            actor_type=ActorType.SYSTEM,
+            payload={"incident_id": str(incident.id), "type": kind.value},
+            lat=lat,
+            lng=lng,
+        )
+    await bump_daily_stat(session, driver_id, hub_id, incidents=1)
+    await session.commit()
+    await session.refresh(incident)
+    logger.info("[raise_system_incident] %s %s driver=%s", incident.code, kind, driver_id)
+    await notify_hub(hub_id, "incident.created", {"incident_id": str(incident.id)})
+    await notify_user(driver_id, "incident.updated", {"incident_id": str(incident.id)})
+    return incident
 
 
 async def list_for_driver(session: AsyncSession, driver_id: uuid.UUID) -> list[IncidentOut]:

@@ -1,12 +1,14 @@
 """ShopNow simulator endpoints (demo deployments only, public like a shop front)."""
 
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, Request
+from pydantic import BaseModel
 
-from app.core.deps import DbSession, require_demo_mode
+from app.core.deps import CurrentUser, DbSession, require_demo_mode, require_permission
 from app.core.pagination import Page, PageParams, page_params
-from app.modules.sim import service, tracking
+from app.modules.sim import demo, service, tracking
 from app.modules.sim.schemas import (
     ManualOrderIn,
     RandomOrdersIn,
@@ -77,3 +79,52 @@ async def track_order(waybill_code: str, session: DbSession) -> TrackOut:
     Errors: ORDER_NOT_FOUND
     """
     return await tracking.track(session, waybill_code)
+
+
+# =============================== Demo control panel (S-04) ===============================
+
+demo_router = APIRouter(
+    prefix="/sim/demo", tags=["simulator"], dependencies=[Depends(require_demo_mode)]
+)
+Resetter = Annotated[CurrentUser, Depends(require_permission("settings.manage"))]
+
+
+class GpsSwitchIn(BaseModel):
+    enabled: bool
+
+
+class TrafficJamIn(BaseModel):
+    driver_id: uuid.UUID | None = None
+
+
+class ResetOut(BaseModel):
+    rows: int
+
+
+@demo_router.get("", response_model=demo.DemoStatusOut)
+async def get_demo_status(session: DbSession) -> demo.DemoStatusOut:
+    """GPS simulator state and the drivers it is moving."""
+    return await demo.status(session)
+
+
+@demo_router.put("/gps", response_model=demo.DemoStatusOut)
+async def switch_gps(data: GpsSwitchIn, session: DbSession) -> demo.DemoStatusOut:
+    """Inputs: {"enabled": true}. Simulated drivers move and deliver while it is on."""
+    return await demo.set_gps(session, data.enabled)
+
+
+@demo_router.post("/traffic-jam", response_model=demo.DemoStatusOut)
+async def start_traffic_jam(data: TrafficJamIn, session: DbSession) -> demo.DemoStatusOut:
+    """
+    Stop one simulated driver; after `anomaly.idle_minutes` the system raises DRIVER_IDLE.
+
+    Inputs: {"driver_id": null | uuid}. Errors: NO_SIMULATED_DRIVER
+    """
+    return await demo.traffic_jam(session, data.driver_id)
+
+
+@demo_router.post("/reset", response_model=ResetOut)
+async def reset_demo(_: Resetter) -> ResetOut:
+    """Reload the demo data set. Everyone is signed out. System admin only."""
+    counts = await demo.reset_demo_data()
+    return ResetOut(rows=sum((counts or {}).values()))
