@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { RouterProvider } from "react-router/dom";
 import { Toaster } from "@/components/ui";
 import { refreshSession } from "@/lib/http";
+import { RealtimeBridge } from "./RealtimeBridge";
 import { router } from "./router";
 
 export function App() {
@@ -25,6 +26,7 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
+      <RealtimeBridge />
       <Toaster />
     </QueryClientProvider>
   );

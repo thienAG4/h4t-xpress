@@ -1,11 +1,53 @@
-// DriverHomePage - D-04: today's shift, availability switch and counters
+// DriverHomePage - D-04: today's shift, availability switch, current route and counters
 
 import { Link } from "react-router";
 import { Alert, Badge, Card, Loading, Switch } from "@/components/ui";
+import { useRoute } from "@/features/delivery/hooks";
 import { errorMessage } from "@/lib/errors";
-import { formatDay, formatTime } from "@/lib/format";
+import { formatClock, formatDay, formatTime } from "@/lib/format";
 import { useSession } from "@/lib/session";
 import { useDriverToday, useSetAvailability } from "../hooks";
+
+function CurrentRoute() {
+  const route = useRoute();
+  if (!route.data) return null;
+  const { to_pick_up: toPickUp, ready_to_start: ready, stops } = route.data;
+  const next = stops.find((stop) => stop.orders.some((order) => order.status === "OUT_FOR_DELIVERY"));
+  return (
+    <Card
+      title="Current route"
+      actions={
+        <Link to="/driver/route" className="text-sm font-semibold text-primary-600">
+          Open
+        </Link>
+      }
+    >
+      {toPickUp.length + ready + stops.length === 0 ? (
+        <p className="text-sm text-neutral-600">No orders yet. Offers appear on screen while you are online.</p>
+      ) : (
+        <dl className="grid grid-cols-3 gap-3 text-center">
+          <div>
+            <dt className="text-xs text-neutral-600">To pick up</dt>
+            <dd className="font-display text-xl font-bold">{toPickUp.length}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-neutral-600">Scanned</dt>
+            <dd className="font-display text-xl font-bold">{ready}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-neutral-600">Stops</dt>
+            <dd className="font-display text-xl font-bold">{stops.length}</dd>
+          </div>
+        </dl>
+      )}
+      {next && (
+        <p className="mt-3 border-t border-line pt-3 text-sm">
+          Next: <span className="font-semibold">{next.recipient_name}</span>, {next.address} at {formatClock(next.eta)}
+        </p>
+      )}
+    </Card>
+  );
+}
 
 export function DriverHomePage() {
   const user = useSession((state) => state.user);
@@ -52,6 +94,8 @@ export function DriverHomePage() {
           </Alert>
         )}
       </Card>
+
+      <CurrentRoute />
 
       <div className="grid grid-cols-2 gap-3">
         <Card className="p-4">

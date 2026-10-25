@@ -115,3 +115,24 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
   return parseResponse<T>(response);
 }
+
+/** Multipart upload of one file (photos). Same token and refresh rules as `request`. */
+export async function uploadFile<T>(path: string, file: Blob, filename: string): Promise<T> {
+  const send = () => {
+    const form = new FormData();
+    form.append("file", file, filename);
+    const token = useSession.getState().accessToken;
+    return fetch(buildUrl(path), {
+      method: "POST",
+      credentials: "include",
+      headers: { Accept: "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: form,
+    });
+  };
+
+  let response = await send();
+  if (response.status === 401 && (await refreshSession())) {
+    response = await send();
+  }
+  return parseResponse<T>(response);
+}

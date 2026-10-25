@@ -9,12 +9,25 @@ import { ForgotPasswordPage } from "@/features/auth/pages/ForgotPasswordPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { VerifyOtpPage } from "@/features/auth/pages/VerifyOtpPage";
+import { DonePage } from "@/features/delivery/pages/DonePage";
+import { EtaPage } from "@/features/delivery/pages/EtaPage";
+import { OrderPage } from "@/features/delivery/pages/OrderPage";
+import { RoutePage } from "@/features/delivery/pages/RoutePage";
+import { StopPage } from "@/features/delivery/pages/StopPage";
 import { DriverHomePage } from "@/features/driver/pages/DriverHomePage";
 import { ProfilePage } from "@/features/driver/pages/ProfilePage";
 import { ShiftsPage } from "@/features/driver/pages/ShiftsPage";
 import { HomePage } from "@/features/home/HomePage";
 import { NotFoundPage } from "@/features/home/NotFoundPage";
+import { HubDashboardPage } from "@/features/hub/pages/HubDashboardPage";
+import { TrackingPage } from "@/features/hub/pages/TrackingPage";
+import { IncidentDetailPage } from "@/features/incidents/pages/IncidentDetailPage";
+import { IncidentListPage } from "@/features/incidents/pages/IncidentListPage";
+import { IncidentsOverviewPage } from "@/features/incidents/pages/IncidentsOverviewPage";
+import { MyIncidentsPage } from "@/features/incidents/pages/MyIncidentsPage";
+import { ReportIncidentPage } from "@/features/incidents/pages/ReportIncidentPage";
 import { ShopNowPage } from "@/features/shopnow/pages/ShopNowPage";
+import { TrackPage } from "@/features/shopnow/pages/TrackPage";
 import { RedirectIfSignedIn, RequireAuth } from "./guards";
 import { AuthLayout } from "./layouts/AuthLayout";
 import { DashboardLayout, type NavItem } from "./layouts/DashboardLayout";
@@ -68,8 +81,14 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <DriverHomePage /> },
+      { path: "route", element: <RoutePage /> },
+      { path: "stops/:stopId", element: <StopPage /> },
+      { path: "orders/:orderId", element: <OrderPage /> },
+      { path: "orders/:orderId/eta", element: <EtaPage /> },
+      { path: "orders/:orderId/done", element: <DonePage /> },
+      { path: "incidents", element: <MyIncidentsPage /> },
+      { path: "incidents/new", element: <ReportIncidentPage /> },
       { path: "shifts", element: <ShiftsPage /> },
-      { path: "orders", element: soon("My orders", "Phase 2", "Offers, order detail, scan, delivery and incidents (D-06..D-14).") },
       { path: "profile", element: <ProfilePage /> },
     ],
   },
@@ -81,9 +100,18 @@ export const router = createBrowserRouter([
       </RequireAuth>
     ),
     children: [
-      { index: true, element: soon("Hub dashboard", "Phase 2", "KPIs, order table and live alerts (H-01).") },
-      { path: "incidents", element: soon("Incidents", "Phase 2", "Classify, respond, reroute or reassign (H-04..H-08).") },
-      { path: "tracking", element: soon("Delivery tracking", "Phase 2", "Live map and order timeline (H-03).") },
+      { index: true, element: <HubDashboardPage /> },
+      {
+        path: "incidents",
+        element: <RequireAuth permission="incident.manage" />,
+        children: [
+          { index: true, element: <IncidentsOverviewPage /> },
+          { path: "list", element: <IncidentListPage /> },
+          { path: ":incidentId", element: <IncidentDetailPage /> },
+        ],
+      },
+      { path: "tracking", element: <TrackingPage /> },
+      { path: "tracking/:orderId", element: <TrackingPage /> },
       { path: "routes", element: soon("Route planning", "Phase 3", "Optimise and reorder stops (H-02).") },
     ],
   },
@@ -121,13 +149,7 @@ export const router = createBrowserRouter([
     ],
   },
   { path: "/shopnow", element: <ShopNowPage /> },
-  {
-    path: "/track/:waybill",
-    element: (
-      <div className="mx-auto max-w-md p-6">
-        {soon("Track your parcel", "Phase 2", "Customer view built from ShopNow webhooks (S-03).")}
-      </div>
-    ),
-  },
+  { path: "/track", element: <TrackPage /> },
+  { path: "/track/:waybill", element: <TrackPage /> },
   { path: "*", element: <NotFoundPage /> },
 ]);

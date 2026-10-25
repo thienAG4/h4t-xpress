@@ -1,4 +1,4 @@
-// Feedback components - Alert, Badge, Card, Loading and EmptyState
+// Feedback components - Alert, Badge, Card, KpiCard, Loading and EmptyState
 
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
@@ -87,5 +87,32 @@ export function EmptyState({ title, children }: { title: string; children?: Reac
       <p className="font-semibold text-ink">{title}</p>
       {children && <div className="mt-2 text-sm text-neutral-600">{children}</div>}
     </div>
+  );
+}
+
+export function KpiCard({
+  label,
+  value,
+  hint,
+  tone = "neutral",
+}: {
+  label: string;
+  value: ReactNode;
+  hint?: ReactNode;
+  tone?: "neutral" | "danger" | "warning" | "success" | "primary";
+}) {
+  const accent = {
+    neutral: "border-l-neutral-300",
+    danger: "border-l-danger-500",
+    warning: "border-l-warning-500",
+    success: "border-l-success-500",
+    primary: "border-l-primary-600",
+  }[tone];
+  return (
+    <section className={cn("rounded-card border border-l-4 border-line bg-white px-5 py-4", accent)}>
+      <p className="text-sm text-neutral-600">{label}</p>
+      <p className="mt-1 font-display text-3xl font-bold text-ink">{value}</p>
+      {hint && <p className="mt-1 text-xs text-neutral-600">{hint}</p>}
+    </section>
   );
 }

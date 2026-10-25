@@ -1,6 +1,13 @@
 // Form fields - label, input/select/textarea, hint and error text (Figma auth inputs)
 
-import { useId, useState, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from "react";
+import {
+  useId,
+  useState,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from "react";
 import { cn } from "@/lib/cn";
 
 const CONTROL =
@@ -135,6 +142,29 @@ export function SelectField({
           </option>
         ))}
       </select>
+    </FieldShell>
+  );
+}
+
+interface TextAreaFieldProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label?: string;
+  hint?: string;
+  error?: string;
+}
+
+export function TextAreaField({ label, hint, error, className, id, rows = 3, ...props }: TextAreaFieldProps) {
+  const generatedId = useId();
+  const areaId = id ?? generatedId;
+  return (
+    <FieldShell id={areaId} label={label} hint={hint} error={error}>
+      <textarea
+        id={areaId}
+        rows={rows}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${areaId}-error` : undefined}
+        className={cn(CONTROL, "py-3", error ? "border-danger-500" : "border-line", className)}
+        {...props}
+      />
     </FieldShell>
   );
 }

@@ -33,7 +33,7 @@ export function DashboardLayout({ title, nav }: Props) {
 
   return (
     <div className="flex min-h-full">
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-line bg-white px-4 py-5 md:flex">
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-line bg-white px-4 py-5 md:flex">
         <NavLink to="/" className="px-2">
           <Logo />
         </NavLink>

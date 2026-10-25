@@ -62,3 +62,12 @@
     @apply font-display;
   }
 }
+
+/* Figma maps are light grey with coloured routes: mute the OpenStreetMap tiles. */
+.map-view .leaflet-tile-pane {
+  filter: grayscale(0.85) brightness(1.04);
+}
+
+.map-view .leaflet-container {
+  font-family: var(--font-sans);
+}

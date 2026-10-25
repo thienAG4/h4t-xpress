@@ -88,7 +88,9 @@ export function ShopNowPage() {
                   {orders.data.items.map((order) => (
                     <tr key={order.waybill_code}>
                       <Td className="font-mono text-xs">
-                        {order.waybill_code}
+                        <Link to={`/track/${order.waybill_code}`} className="font-semibold text-shop-700 hover:underline">
+                          {order.waybill_code}
+                        </Link>
                         {order.priority === "EXPRESS" && (
                           <span className="ml-2">
                             <Badge tone="warning">Express</Badge>

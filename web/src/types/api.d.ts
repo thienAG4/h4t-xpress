@@ -382,6 +382,696 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/driver/heartbeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Heartbeat
+         * @description Sent every 15 seconds while the app is open (BR4 freshness, BR10 position).
+         *
+         *     Inputs: {"lat", "lng", "accuracy_m"}, all optional when GPS is refused.
+         */
+        post: operations["heartbeat_api_v1_driver_heartbeat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/driver/offers/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Current Offer
+         * @description The open offer with its countdown, or null.
+         */
+        get: operations["get_current_offer_api_v1_driver_offers_current_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/driver/offers/{offer_id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept Offer
+         * @description Take the order(s) of the offer (BR8). Returns the updated route.
+         *
+         *     Errors: OFFER_NOT_FOUND, OFFER_CLOSED, OFFER_EXPIRED, ORDER_NOT_AVAILABLE
+         */
+        post: operations["accept_offer_api_v1_driver_offers__offer_id__accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/driver/offers/{offer_id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Decline Offer
+         * @description Inputs: {"reason"} (optional). Errors: OFFER_NOT_FOUND, OFFER_CLOSED.
+         */
+        post: operations["decline_offer_api_v1_driver_offers__offer_id__decline_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/driver/route": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Route
+         * @description Today's work: parcels to collect first, then stops in delivery order.
+         *
+         *     Outputs: {"hub_name", "hub_lat", "hub_lng", "driver_lat", "driver_lng",
+         *               "to_pick_up": [order], "ready_to_start", "stops": [stop]}
+         */
+        get: operations["get_route_api_v1_driver_route_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/driver/route/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Route
+         * @description Leave with every scanned parcel (BR9). Errors: NOTHING_TO_START.
+         */
+        post: operations["start_route_api_v1_driver_route_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/driver/orders/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Order */
+        get: operations["get_order_api_v1_driver_orders__order_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/driver/orders/{order_id}/scan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Scan Order
+         * @description Confirm the parcel in hand by its waybill code (manual entry on the web).
+         *
+         *     Inputs: {"waybill_code", "lat", "lng"}. Errors: WAYBILL_MISMATCH, INVALID_TRANSITION
+         */
+        post: operations["scan_order_api_v1_driver_orders__order_id__scan_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/driver/orders/{order_id}/deliver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Deliver Order
+         * @description Successful hand-over with proof photos (BR16).
+         *
+         *     Inputs: {"photo_file_ids": [...], "note", "lat", "lng"}. Errors: EVIDENCE_REQUIRED
+         */
+        post: operations["deliver_order_api_v1_driver_orders__order_id__deliver_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/driver/orders/{order_id}/fail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fail Order
+         * @description Failed attempt with a reason (BR17); reschedule or return to the hub.
+         *
+         *     Inputs: {"reason", "note", "proposed_date"}. Errors: RESCHEDULE_DATE_INVALID
+         */
+        post: operations["fail_order_api_v1_driver_orders__order_id__fail_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/driver/orders/{order_id}/eta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Eta
+         * @description Manual ETA with a reason (D-12). Errors: ETA_IN_PAST.
+         */
+        put: operations["update_eta_api_v1_driver_orders__order_id__eta_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/driver/orders/{order_id}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Release Order
+         * @description Give an order back before pickup (EX4). Errors: INVALID_TRANSITION.
+         */
+        post: operations["release_order_api_v1_driver_orders__order_id__release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/driver/incidents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List My Incidents */
+        get: operations["list_my_incidents_api_v1_driver_incidents_get"];
+        put?: never;
+        /**
+         * Report Incident
+         * @description Report a problem on the road (UC-03 step 1).
+         *
+         *     Inputs: {"type", "description", "photo_file_ids": [...], "order_ids": [...] | null,
+         *              "lat", "lng"}. Without order_ids every order in hand is affected.
+         *     Errors: EVIDENCE_REQUIRED, NO_ACTIVE_ORDER, FILE_NOT_FOUND
+         */
+        post: operations["report_incident_api_v1_driver_incidents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/driver/incidents/{incident_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get My Incident
+         * @description Status and the hub's answer, refreshed by the `incident.updated` event.
+         */
+        get: operations["get_my_incident_api_v1_driver_incidents__incident_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Dashboard
+         * @description Hub overview (H-01).
+         *
+         *     Outputs: {"date", "total", "by_status", "at_risk", "delivered_today",
+         *               "on_time_rate_today", "open_incidents", "high_priority_incidents",
+         *               "drivers_online", "drivers_on_shift"}
+         */
+        get: operations["get_dashboard_api_v1_hub_dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Orders
+         * @description Orders of the hub, SLA risks first (UC-02).
+         *
+         *     Inputs (query): status (repeatable), at_risk, q (waybill, name or phone), today_only
+         */
+        get: operations["list_orders_api_v1_hub_orders_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/orders/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Order
+         * @description Order page with driver position, timeline and delivery attempts (H-03).
+         */
+        get: operations["get_order_api_v1_hub_orders__order_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/drivers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Drivers
+         * @description Drivers of the hub with live position and load, online first.
+         */
+        get: operations["list_drivers_api_v1_hub_drivers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/drivers/{driver_id}/route": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Driver Route
+         * @description The same route the driver sees (D-07), for the tracking map.
+         */
+        get: operations["get_driver_route_api_v1_hub_drivers__driver_id__route_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/orders/{order_id}/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Candidates
+         * @description Eligible drivers for a manual offer (H-07), best score first.
+         */
+        get: operations["list_candidates_api_v1_hub_orders__order_id__candidates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/orders/{order_id}/reassign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reassign Order
+         * @description Offer the order to a chosen driver; the driver still has to accept (FR-H-01).
+         *
+         *     Inputs: {"driver_id"}
+         *     Errors: INVALID_TRANSITION (parcel already picked up), DRIVER_NOT_AVAILABLE, DRIVER_BUSY
+         */
+        post: operations["reassign_order_api_v1_hub_orders__order_id__reassign_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/orders/{order_id}/hold": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hold Order
+         * @description Keep a waiting order at the hub. Errors: INVALID_TRANSITION.
+         */
+        post: operations["hold_order_api_v1_hub_orders__order_id__hold_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/orders/{order_id}/release-hold": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Release Hold
+         * @description ON_HOLD -> AWAITING_ASSIGNMENT; dispatch starts a new cycle.
+         */
+        post: operations["release_hold_api_v1_hub_orders__order_id__release_hold_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/orders/{order_id}/returned": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm Returned
+         * @description The returned parcel is back at the hub (RETURNING -> RETURNED_TO_HUB).
+         */
+        post: operations["confirm_returned_api_v1_hub_orders__order_id__returned_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/incidents/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Summary
+         * @description Counters of H-04: open, in review, resolving, resolved today, by priority, by type.
+         */
+        get: operations["get_summary_api_v1_hub_incidents_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/incidents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Incidents
+         * @description Incident list (H-05), open and high priority first.
+         */
+        get: operations["list_incidents_api_v1_hub_incidents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/incidents/{incident_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Incident */
+        get: operations["get_incident_api_v1_hub_incidents__incident_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/incidents/{incident_id}/classify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Classify Incident
+         * @description Set category and priority (UC-03 step 2, BR13).
+         *
+         *     Inputs: {"category": "OBJECTIVE" | "SUBJECTIVE", "priority": "LOW" | "MEDIUM" | "HIGH"}
+         *     Errors: INCIDENT_CLOSED
+         */
+        post: operations["classify_incident_api_v1_hub_incidents__incident_id__classify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/incidents/{incident_id}/respond": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Respond Incident
+         * @description Answer the driver (BR14). Errors: INCIDENT_NOT_CLASSIFIED.
+         */
+        post: operations["respond_incident_api_v1_hub_incidents__incident_id__respond_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/incidents/{incident_id}/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Candidates
+         * @description Replacement drivers around the incident location (UC-04).
+         */
+        get: operations["list_candidates_api_v1_hub_incidents__incident_id__candidates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/incidents/{incident_id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resolve Incident
+         * @description Apply a solution (BR15).
+         *
+         *     Inputs: {"solution": "ROUTE_SUGGESTED", "stop_ids": [...]}
+         *             {"solution": "DRIVER_REASSIGNMENT", "driver_id", "order_ids": [...] | null}
+         *             {"solution": "HOLD_AT_HUB", "note"}
+         *     Errors: INCIDENT_NOT_CLASSIFIED, RESPONSE_REQUIRED, INCIDENT_CLOSED,
+         *             DRIVER_NOT_AVAILABLE, DRIVER_BUSY
+         */
+        post: operations["resolve_incident_api_v1_hub_incidents__incident_id__resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload File
+         * @description Upload one image (multipart field `file`).
+         *
+         *     Errors: FILE_TYPE (only JPEG/PNG/WebP), FILE_TOO_LARGE (> 5 MB), FILE_EMPTY
+         *     Outputs: {"id", "url", "mime", "size_bytes"}
+         */
+        post: operations["upload_file_api_v1_files_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/files/{file_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get File */
+        get: operations["get_file_api_v1_files__file_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users": {
         parameters: {
             query?: never;
@@ -725,10 +1415,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sim/track/{waybill_code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Track Order
+         * @description Customer tracking page (S-03), public: timeline, ETA, delay reason and apology.
+         *
+         *     Errors: ORDER_NOT_FOUND
+         */
+        get: operations["track_order_api_v1_sim_track__waybill_code__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AttemptOut */
+        AttemptOut: {
+            outcome: components["schemas"]["AttemptOutcome"];
+            failure_reason: components["schemas"]["FailureReason"] | null;
+            /** Note */
+            note: string | null;
+            /**
+             * Attempted At
+             * Format: date-time
+             */
+            attempted_at: string;
+            /** Photo Urls */
+            photo_urls: string[];
+        };
+        /**
+         * AttemptOutcome
+         * @enum {string}
+         */
+        AttemptOutcome: "DELIVERED" | "FAILED";
         /** AvailabilityIn */
         AvailabilityIn: {
             /** Online */
@@ -738,6 +1469,11 @@ export interface components {
         AvailabilityOut: {
             availability: components["schemas"]["DriverAvailability"];
         };
+        /** Body_upload_file_api_v1_files_post */
+        Body_upload_file_api_v1_files_post: {
+            /** File */
+            file: string;
+        };
         /** CancelIn */
         CancelIn: {
             /**
@@ -746,12 +1482,83 @@ export interface components {
              */
             reason?: string;
         };
+        /** CandidateOut */
+        CandidateOut: {
+            /**
+             * Driver Id
+             * Format: uuid
+             */
+            driver_id: string;
+            /** Name */
+            name: string;
+            /** Phone */
+            phone: string | null;
+            /** Distance Km */
+            distance_km: number;
+            /** Active Orders */
+            active_orders: number;
+            /** Score */
+            score: number;
+            /** Lat */
+            lat: number | null;
+            /** Lng */
+            lng: number | null;
+        };
         /** ChangePasswordIn */
         ChangePasswordIn: {
             /** Current Password */
             current_password: string;
             /** New Password */
             new_password: string;
+        };
+        /** ClassifyIn */
+        ClassifyIn: {
+            category: components["schemas"]["IncidentCategory"];
+            priority: components["schemas"]["IncidentPriority"];
+        };
+        /** DashboardOut */
+        DashboardOut: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Total */
+            total: number;
+            /** By Status */
+            by_status: {
+                [key: string]: number;
+            };
+            /** At Risk */
+            at_risk: number;
+            /** Delivered Today */
+            delivered_today: number;
+            /** On Time Rate Today */
+            on_time_rate_today: number | null;
+            /** Open Incidents */
+            open_incidents: number;
+            /** High Priority Incidents */
+            high_priority_incidents: number;
+            /** Drivers Online */
+            drivers_online: number;
+            /** Drivers On Shift */
+            drivers_on_shift: number;
+        };
+        /** DeclineIn */
+        DeclineIn: {
+            /** Reason */
+            reason?: string | null;
+        };
+        /** DeliverIn */
+        DeliverIn: {
+            /** Photo File Ids */
+            photo_file_ids?: string[];
+            /** Note */
+            note?: string | null;
+            /** Lat */
+            lat?: number | null;
+            /** Lng */
+            lng?: number | null;
         };
         /** DemoLoginIn */
         DemoLoginIn: {
@@ -762,6 +1569,112 @@ export interface components {
          * @enum {string}
          */
         DriverAvailability: "ONLINE" | "OFFLINE";
+        /** DriverBrief */
+        DriverBrief: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Phone */
+            phone: string | null;
+            /** Lat */
+            lat: number | null;
+            /** Lng */
+            lng: number | null;
+        };
+        /** DriverOrderDetailOut */
+        DriverOrderDetailOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Waybill Code */
+            waybill_code: string;
+            status: components["schemas"]["OrderStatus"];
+            priority: components["schemas"]["OrderPriority"];
+            /** Recipient Name */
+            recipient_name: string;
+            /** Recipient Phone */
+            recipient_phone: string;
+            /** Delivery Address */
+            delivery_address: string;
+            /** Delivery Lat */
+            delivery_lat: number;
+            /** Delivery Lng */
+            delivery_lng: number;
+            /** Items */
+            items: components["schemas"]["OrderItemOut"][];
+            /** Weight Kg */
+            weight_kg: string;
+            /** Cod Amount */
+            cod_amount: string;
+            /** Note */
+            note: string | null;
+            /**
+             * Promised At
+             * Format: date-time
+             */
+            promised_at: string;
+            /** Current Eta */
+            current_eta: string | null;
+            /** Eta Is Estimate */
+            eta_is_estimate: boolean;
+            /** Handover From */
+            handover_from: string | null;
+            /** Active Incident Id */
+            active_incident_id: string | null;
+            /** Stop Id */
+            stop_id: string | null;
+            /** Timeline */
+            timeline: components["schemas"]["TimelineEventOut"][];
+        };
+        /** DriverOrderOut */
+        DriverOrderOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Waybill Code */
+            waybill_code: string;
+            status: components["schemas"]["OrderStatus"];
+            priority: components["schemas"]["OrderPriority"];
+            /** Recipient Name */
+            recipient_name: string;
+            /** Recipient Phone */
+            recipient_phone: string;
+            /** Delivery Address */
+            delivery_address: string;
+            /** Delivery Lat */
+            delivery_lat: number;
+            /** Delivery Lng */
+            delivery_lng: number;
+            /** Items */
+            items: components["schemas"]["OrderItemOut"][];
+            /** Weight Kg */
+            weight_kg: string;
+            /** Cod Amount */
+            cod_amount: string;
+            /** Note */
+            note: string | null;
+            /**
+             * Promised At
+             * Format: date-time
+             */
+            promised_at: string;
+            /** Current Eta */
+            current_eta: string | null;
+            /** Eta Is Estimate */
+            eta_is_estimate: boolean;
+            /** Handover From */
+            handover_from: string | null;
+            /** Active Incident Id */
+            active_incident_id: string | null;
+        };
         /** DriverProfileOut */
         DriverProfileOut: {
             /** Vehicle Plate */
@@ -789,6 +1702,47 @@ export interface components {
             active_orders: number;
             /** Delivered Today */
             delivered_today: number;
+        };
+        /** EtaIn */
+        EtaIn: {
+            /**
+             * Eta
+             * Format: date-time
+             */
+            eta: string;
+            /** Reason */
+            reason: string;
+        };
+        /** FailIn */
+        FailIn: {
+            reason: components["schemas"]["FailureReason"];
+            /** Note */
+            note?: string | null;
+            /** Proposed Date */
+            proposed_date?: string | null;
+            /** Lat */
+            lat?: number | null;
+            /** Lng */
+            lng?: number | null;
+        };
+        /**
+         * FailureReason
+         * @enum {string}
+         */
+        FailureReason: "CUSTOMER_REFUSED" | "CUSTOMER_UNREACHABLE" | "CUSTOMER_ABSENT" | "WRONG_ADDRESS" | "OTHER";
+        /** FileOut */
+        FileOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Url */
+            url: string;
+            /** Mime */
+            mime: string;
+            /** Size Bytes */
+            size_bytes: number;
         };
         /** ForgotPasswordIn */
         ForgotPasswordIn: {
@@ -828,6 +1782,144 @@ export interface components {
             /** Demo Mode */
             demo_mode: boolean;
         };
+        /** HeartbeatIn */
+        HeartbeatIn: {
+            /** Lat */
+            lat?: number | null;
+            /** Lng */
+            lng?: number | null;
+            /** Accuracy M */
+            accuracy_m?: number | null;
+        };
+        /** HoldIn */
+        HoldIn: {
+            /** Reason */
+            reason: string;
+        };
+        /** HubDriverRow */
+        HubDriverRow: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Phone */
+            phone: string | null;
+            availability: components["schemas"]["DriverAvailability"];
+            /** Last Seen At */
+            last_seen_at: string | null;
+            /** Lat */
+            lat: number | null;
+            /** Lng */
+            lng: number | null;
+            /** Active Orders */
+            active_orders: number;
+            /** Shift Today */
+            shift_today: string | null;
+            /** Has Pending Offer */
+            has_pending_offer: boolean;
+        };
+        /** HubOrderDetail */
+        HubOrderDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Waybill Code */
+            waybill_code: string;
+            status: components["schemas"]["OrderStatus"];
+            priority: components["schemas"]["OrderPriority"];
+            /** Recipient Name */
+            recipient_name: string;
+            /** Delivery Address */
+            delivery_address: string;
+            /** Driver Id */
+            driver_id: string | null;
+            /** Driver Name */
+            driver_name: string | null;
+            /**
+             * Promised At
+             * Format: date-time
+             */
+            promised_at: string;
+            /** Current Eta */
+            current_eta: string | null;
+            /** At Risk */
+            at_risk: boolean;
+            /** Has Incident */
+            has_incident: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Recipient Phone */
+            recipient_phone: string;
+            /** Delivery Lat */
+            delivery_lat: number;
+            /** Delivery Lng */
+            delivery_lng: number;
+            /** Items */
+            items: components["schemas"]["OrderItemOut"][];
+            /** Weight Kg */
+            weight_kg: string;
+            /** Cod Amount */
+            cod_amount: string;
+            /** Eta Is Estimate */
+            eta_is_estimate: boolean;
+            driver: components["schemas"]["DriverBrief"] | null;
+            /** Handover From */
+            handover_from: string | null;
+            /** Incident Id */
+            incident_id: string | null;
+            /** Hub Lat */
+            hub_lat: number;
+            /** Hub Lng */
+            hub_lng: number;
+            /** Timeline */
+            timeline: components["schemas"]["TimelineEventOut"][];
+            /** Attempts */
+            attempts: components["schemas"]["AttemptOut"][];
+        };
+        /** HubOrderRow */
+        HubOrderRow: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Waybill Code */
+            waybill_code: string;
+            status: components["schemas"]["OrderStatus"];
+            priority: components["schemas"]["OrderPriority"];
+            /** Recipient Name */
+            recipient_name: string;
+            /** Delivery Address */
+            delivery_address: string;
+            /** Driver Id */
+            driver_id: string | null;
+            /** Driver Name */
+            driver_name: string | null;
+            /**
+             * Promised At
+             * Format: date-time
+             */
+            promised_at: string;
+            /** Current Eta */
+            current_eta: string | null;
+            /** At Risk */
+            at_risk: boolean;
+            /** Has Incident */
+            has_incident: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** HubOut */
         HubOut: {
             /**
@@ -848,6 +1940,159 @@ export interface components {
             /** Lng */
             lng: number;
         };
+        /**
+         * IncidentCategory
+         * @enum {string}
+         */
+        IncidentCategory: "OBJECTIVE" | "SUBJECTIVE";
+        /** IncidentListItem */
+        IncidentListItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Code */
+            code: string;
+            type: components["schemas"]["IncidentType"];
+            status: components["schemas"]["IncidentStatus"];
+            priority: components["schemas"]["IncidentPriority"] | null;
+            category: components["schemas"]["IncidentCategory"] | null;
+            /** Description */
+            description: string;
+            /** Driver Name */
+            driver_name: string;
+            /** Order Count */
+            order_count: number;
+            /**
+             * Reported At
+             * Format: date-time
+             */
+            reported_at: string;
+        };
+        /** IncidentOrderOut */
+        IncidentOrderOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Waybill Code */
+            waybill_code: string;
+            status: components["schemas"]["OrderStatus"];
+            priority: components["schemas"]["OrderPriority"];
+            /** Recipient Name */
+            recipient_name: string;
+            /** Delivery Address */
+            delivery_address: string;
+            /**
+             * Promised At
+             * Format: date-time
+             */
+            promised_at: string;
+            /** Current Eta */
+            current_eta: string | null;
+            /** Current Driver Name */
+            current_driver_name: string | null;
+        };
+        /** IncidentOut */
+        IncidentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Code */
+            code: string;
+            type: components["schemas"]["IncidentType"];
+            source: components["schemas"]["IncidentSource"];
+            status: components["schemas"]["IncidentStatus"];
+            /** Description */
+            description: string;
+            suggested_category: components["schemas"]["IncidentCategory"] | null;
+            category: components["schemas"]["IncidentCategory"] | null;
+            priority: components["schemas"]["IncidentPriority"] | null;
+            /** Hub Response */
+            hub_response: string | null;
+            /** Lat */
+            lat: number | null;
+            /** Lng */
+            lng: number | null;
+            /**
+             * Reported At
+             * Format: date-time
+             */
+            reported_at: string;
+            /** Classified At */
+            classified_at: string | null;
+            /** Resolved At */
+            resolved_at: string | null;
+            driver: components["schemas"]["PersonOut"];
+            /** Handled By */
+            handled_by: string | null;
+            /** Photo Urls */
+            photo_urls: string[];
+            /** Orders */
+            orders: components["schemas"]["IncidentOrderOut"][];
+            /** Resolutions */
+            resolutions: components["schemas"]["ResolutionOut"][];
+        };
+        /**
+         * IncidentPriority
+         * @enum {string}
+         */
+        IncidentPriority: "HIGH" | "MEDIUM" | "LOW";
+        /**
+         * IncidentReportIn
+         * @description Driver report (D-11). Type, description and at least one photo are required.
+         */
+        IncidentReportIn: {
+            type: components["schemas"]["IncidentType"];
+            /** Description */
+            description: string;
+            /** Photo File Ids */
+            photo_file_ids?: string[];
+            /** Order Ids */
+            order_ids?: string[] | null;
+            /** Lat */
+            lat?: number | null;
+            /** Lng */
+            lng?: number | null;
+        };
+        /**
+         * IncidentSource
+         * @enum {string}
+         */
+        IncidentSource: "DRIVER" | "SYSTEM";
+        /**
+         * IncidentStatus
+         * @enum {string}
+         */
+        IncidentStatus: "OPEN" | "IN_REVIEW" | "RESOLVING" | "RESOLVED" | "CLOSED_NO_ACTION";
+        /** IncidentSummaryOut */
+        IncidentSummaryOut: {
+            /** Open */
+            open: number;
+            /** In Review */
+            in_review: number;
+            /** Resolving */
+            resolving: number;
+            /** Resolved Today */
+            resolved_today: number;
+            /** By Priority */
+            by_priority: {
+                [key: string]: number;
+            };
+            /** By Type 30D */
+            by_type_30d: {
+                [key: string]: number;
+            };
+        };
+        /**
+         * IncidentType
+         * @enum {string}
+         */
+        IncidentType: "TRAFFIC_JAM" | "WEATHER" | "TRAFFIC_ACCIDENT" | "VEHICLE_BREAKDOWN" | "HEALTH" | "GOODS_DAMAGED" | "OTHER" | "ETA_ANOMALY" | "DRIVER_IDLE";
         /** LoginIn */
         LoginIn: {
             /**
@@ -942,8 +2187,47 @@ export interface components {
             /** Address */
             address?: string | null;
         };
+        /** OfferOut */
+        OfferOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Seconds Left */
+            seconds_left: number;
+            /** Source */
+            source: string;
+            /** Is Rescue */
+            is_rescue: boolean;
+            /** Order Count */
+            order_count: number;
+            /** Waybill Codes */
+            waybill_codes: string[];
+            /** Pickup Label */
+            pickup_label: string;
+            /** Delivery Addresses */
+            delivery_addresses: string[];
+            /** Distance Km */
+            distance_km: number | null;
+            priority: components["schemas"]["OrderPriority"];
+            /** Cod Total */
+            cod_total: string;
+        };
         /** OrderItemIn */
         OrderItemIn: {
+            /** Name */
+            name: string;
+            /** Qty */
+            qty: number;
+        };
+        /** OrderItemOut */
+        OrderItemOut: {
             /** Name */
             name: string;
             /** Qty */
@@ -981,6 +2265,28 @@ export interface components {
             resend_available_at: string;
             /** Demo Code */
             demo_code?: string | null;
+        };
+        /** Page[HubOrderRow] */
+        Page_HubOrderRow_: {
+            /** Items */
+            items: components["schemas"]["HubOrderRow"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+        };
+        /** Page[IncidentListItem] */
+        Page_IncidentListItem_: {
+            /** Items */
+            items: components["schemas"]["IncidentListItem"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
         };
         /** Page[SimOrderOut] */
         Page_SimOrderOut_: {
@@ -1114,6 +2420,18 @@ export interface components {
             /** Description */
             description: string;
         };
+        /** PersonOut */
+        PersonOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Phone */
+            phone: string | null;
+        };
         /** RandomOrdersIn */
         RandomOrdersIn: {
             /** Hub Code */
@@ -1128,6 +2446,14 @@ export interface components {
              * @default 0.15
              */
             express_ratio?: number;
+        };
+        /** ReassignIn */
+        ReassignIn: {
+            /**
+             * Driver Id
+             * Format: uuid
+             */
+            driver_id: string;
         };
         /**
          * RegisterDriverIn
@@ -1189,6 +2515,11 @@ export interface components {
             work_date: string;
             status: components["schemas"]["ShiftRegistrationStatus"];
         };
+        /** ReleaseIn */
+        ReleaseIn: {
+            /** Reason */
+            reason: string;
+        };
         /** ResendOtpIn */
         ResendOtpIn: {
             /** Phone */
@@ -1204,6 +2535,47 @@ export interface components {
             code: string;
             /** New Password */
             new_password: string;
+        };
+        /** ResolutionOut */
+        ResolutionOut: {
+            solution: components["schemas"]["ResolutionSolution"];
+            status: components["schemas"]["ResolutionStatus"];
+            /** New Driver Name */
+            new_driver_name: string | null;
+            /**
+             * Decided At
+             * Format: date-time
+             */
+            decided_at: string;
+            /** Note */
+            note: string | null;
+        };
+        /**
+         * ResolutionSolution
+         * @enum {string}
+         */
+        ResolutionSolution: "ROUTE_SUGGESTED" | "DRIVER_REASSIGNMENT" | "HOLD_AT_HUB";
+        /**
+         * ResolutionStatus
+         * @enum {string}
+         */
+        ResolutionStatus: "PENDING" | "DONE" | "FAILED";
+        /** ResolveIn */
+        ResolveIn: {
+            solution: components["schemas"]["ResolutionSolution"];
+            /** Driver Id */
+            driver_id?: string | null;
+            /** Order Ids */
+            order_ids?: string[] | null;
+            /** Stop Ids */
+            stop_ids?: string[] | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** RespondIn */
+        RespondIn: {
+            /** Message */
+            message: string;
         };
         /**
          * RoleCode
@@ -1229,6 +2601,34 @@ export interface components {
             permissions: string[];
             /** User Count */
             user_count: number;
+        };
+        /** RouteOut */
+        RouteOut: {
+            /** Hub Name */
+            hub_name: string;
+            /** Hub Lat */
+            hub_lat: number;
+            /** Hub Lng */
+            hub_lng: number;
+            /** Driver Lat */
+            driver_lat: number | null;
+            /** Driver Lng */
+            driver_lng: number | null;
+            /** To Pick Up */
+            to_pick_up: components["schemas"]["DriverOrderOut"][];
+            /** Ready To Start */
+            ready_to_start: number;
+            /** Stops */
+            stops: components["schemas"]["StopOut"][];
+        };
+        /** ScanIn */
+        ScanIn: {
+            /** Waybill Code */
+            waybill_code: string;
+            /** Lat */
+            lat?: number | null;
+            /** Lng */
+            lng?: number | null;
         };
         /**
          * ShiftCode
@@ -1350,10 +2750,61 @@ export interface components {
          * @enum {string}
          */
         SlotStatus: "AVAILABLE" | "REGISTERED" | "FULL" | "CLOSED" | "CONFLICT";
+        /** StartOut */
+        StartOut: {
+            /** Started */
+            started: number;
+        };
+        /** StopOut */
+        StopOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Seq */
+            seq: number;
+            status: components["schemas"]["StopStatus"];
+            /** Address */
+            address: string;
+            /** Lat */
+            lat: number;
+            /** Lng */
+            lng: number;
+            /** Recipient Name */
+            recipient_name: string;
+            /** Recipient Phone */
+            recipient_phone: string;
+            /** Eta */
+            eta: string | null;
+            /** Orders */
+            orders: components["schemas"]["DriverOrderOut"][];
+        };
+        /**
+         * StopStatus
+         * @enum {string}
+         */
+        StopStatus: "PENDING" | "ARRIVED" | "DONE" | "SKIPPED";
         /** TemporaryPasswordOut */
         TemporaryPasswordOut: {
             /** Temporary Password */
             temporary_password: string;
+        };
+        /** TimelineEventOut */
+        TimelineEventOut: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Type */
+            type: string;
+            from_status: components["schemas"]["OrderStatus"] | null;
+            to_status: components["schemas"]["OrderStatus"] | null;
+            /** Payload */
+            payload: {
+                [key: string]: unknown;
+            };
         };
         /** TokenOut */
         TokenOut: {
@@ -1367,6 +2818,65 @@ export interface components {
             /** Expires In */
             expires_in: number;
             user: components["schemas"]["MeOut"];
+        };
+        /** TrackDriverOut */
+        TrackDriverOut: {
+            /** Name */
+            name: string;
+            /** Phone */
+            phone: string | null;
+        };
+        /**
+         * TrackOut
+         * @description Customer tracking page (S-03), built only from what ShopNow received.
+         */
+        TrackOut: {
+            /** Waybill Code */
+            waybill_code: string;
+            /** Partner Order Ref */
+            partner_order_ref: string;
+            /** Recipient Name */
+            recipient_name: string;
+            /** Delivery Address */
+            delivery_address: string;
+            /** Status */
+            status: string;
+            /** Status Label */
+            status_label: string;
+            /**
+             * Promised At
+             * Format: date-time
+             */
+            promised_at: string;
+            /** Eta */
+            eta: string | null;
+            /** Eta Is Estimate */
+            eta_is_estimate: boolean;
+            /** Is Late */
+            is_late: boolean;
+            /** Delay Message */
+            delay_message: string | null;
+            driver: components["schemas"]["TrackDriverOut"] | null;
+            /** Proof Url */
+            proof_url: string | null;
+            /** Steps */
+            steps: components["schemas"]["TrackStepOut"][];
+        };
+        /** TrackStepOut */
+        TrackStepOut: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Event */
+            event: string;
+            /** Status */
+            status: string | null;
+            /** Title */
+            title: string;
+            /** Message */
+            message: string | null;
         };
         /** UpdateRolePermissionsIn */
         UpdateRolePermissionsIn: {
@@ -2081,6 +3591,1036 @@ export interface operations {
             };
         };
     };
+    heartbeat_api_v1_driver_heartbeat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HeartbeatIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_current_offer_api_v1_driver_offers_current_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferOut"] | null;
+                };
+            };
+        };
+    };
+    accept_offer_api_v1_driver_offers__offer_id__accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RouteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decline_offer_api_v1_driver_offers__offer_id__decline_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeclineIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_route_api_v1_driver_route_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RouteOut"];
+                };
+            };
+        };
+    };
+    start_route_api_v1_driver_route_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StartOut"];
+                };
+            };
+        };
+    };
+    get_order_api_v1_driver_orders__order_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriverOrderDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scan_order_api_v1_driver_orders__order_id__scan_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScanIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriverOrderOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deliver_order_api_v1_driver_orders__order_id__deliver_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeliverIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriverOrderOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    fail_order_api_v1_driver_orders__order_id__fail_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FailIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriverOrderOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_eta_api_v1_driver_orders__order_id__eta_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EtaIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriverOrderOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    release_order_api_v1_driver_orders__order_id__release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReleaseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_my_incidents_api_v1_driver_incidents_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentOut"][];
+                };
+            };
+        };
+    };
+    report_incident_api_v1_driver_incidents_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncidentReportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_my_incident_api_v1_driver_incidents__incident_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_dashboard_api_v1_hub_dashboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardOut"];
+                };
+            };
+        };
+    };
+    list_orders_api_v1_hub_orders_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["OrderStatus"][] | null;
+                at_risk?: boolean;
+                q?: string | null;
+                today_only?: boolean;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_HubOrderRow_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_order_api_v1_hub_orders__order_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HubOrderDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_drivers_api_v1_hub_drivers_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HubDriverRow"][];
+                };
+            };
+        };
+    };
+    get_driver_route_api_v1_hub_drivers__driver_id__route_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                driver_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RouteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_candidates_api_v1_hub_orders__order_id__candidates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandidateOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reassign_order_api_v1_hub_orders__order_id__reassign_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReassignIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HubOrderDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    hold_order_api_v1_hub_orders__order_id__hold_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HoldIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HubOrderDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    release_hold_api_v1_hub_orders__order_id__release_hold_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HubOrderDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_returned_api_v1_hub_orders__order_id__returned_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HubOrderDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_summary_api_v1_hub_incidents_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentSummaryOut"];
+                };
+            };
+        };
+    };
+    list_incidents_api_v1_hub_incidents_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["IncidentStatus"] | null;
+                priority?: components["schemas"]["IncidentPriority"] | null;
+                open_only?: boolean;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_IncidentListItem_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_incident_api_v1_hub_incidents__incident_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    classify_incident_api_v1_hub_incidents__incident_id__classify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassifyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    respond_incident_api_v1_hub_incidents__incident_id__respond_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RespondIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_candidates_api_v1_hub_incidents__incident_id__candidates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandidateOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_incident_api_v1_hub_incidents__incident_id__resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_file_api_v1_files_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_file_api_v1_files_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FileOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_file_api_v1_files__file_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_users_api_v1_admin_users_get: {
         parameters: {
             query?: {
@@ -2698,6 +5238,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SimWebhookOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    track_order_api_v1_sim_track__waybill_code__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                waybill_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrackOut"];
                 };
             };
             /** @description Validation Error */
