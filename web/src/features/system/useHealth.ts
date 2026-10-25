@@ -1,5 +1,7 @@
+// useHealth - polls /api/v1/health; a 503 still carries a body (database down)
+
 import { useQuery } from "@tanstack/react-query";
-import { ApiError, apiGet } from "@/lib/api";
+import { ApiError, request } from "@/lib/http";
 
 export type Health = {
   status: "ok" | "degraded";
@@ -8,16 +10,15 @@ export type Health = {
   demo_mode: boolean;
 };
 
-/** Polls /api/v1/health. A 503 still carries a Health body (database down). */
 export function useHealth() {
   return useQuery({
     queryKey: ["health"],
     queryFn: async () => {
       try {
-        return await apiGet<Health>("/health");
+        return await request<Health>("/health", { auth: false });
       } catch (error) {
-        if (error instanceof ApiError && error.status === 503 && error.body) {
-          return error.body as Health;
+        if (error instanceof ApiError && error.status === 503) {
+          return { status: "degraded", database: "unavailable", version: "", demo_mode: false };
         }
         throw error;
       }
@@ -26,4 +27,9 @@ export function useHealth() {
     retry: 6,
     retryDelay: 5_000,
   });
+}
+
+/** True when the API reports demo mode (quick logins, OTP banner, simulator). */
+export function useDemoMode(): boolean {
+  return useHealth().data?.demo_mode ?? false;
 }

@@ -1,37 +1,41 @@
-import {
-  AlertTriangle,
-  BarChart3,
-  Building2,
-  CalendarClock,
-  LayoutDashboard,
-  MapPinned,
-  Route,
-  ShieldCheck,
-  SlidersHorizontal,
-  Users,
-} from "lucide-react";
+// Router - public pages, sign-in flow and one guarded area per role (SPEC §4.3)
+
 import { createBrowserRouter } from "react-router";
 import { ComingSoon } from "@/components/ComingSoon";
+import { RolesPage } from "@/features/admin/pages/RolesPage";
+import { UserFormPage } from "@/features/admin/pages/UserFormPage";
+import { UsersPage } from "@/features/admin/pages/UsersPage";
+import { ForgotPasswordPage } from "@/features/auth/pages/ForgotPasswordPage";
+import { LoginPage } from "@/features/auth/pages/LoginPage";
+import { RegisterPage } from "@/features/auth/pages/RegisterPage";
+import { VerifyOtpPage } from "@/features/auth/pages/VerifyOtpPage";
+import { DriverHomePage } from "@/features/driver/pages/DriverHomePage";
+import { ProfilePage } from "@/features/driver/pages/ProfilePage";
+import { ShiftsPage } from "@/features/driver/pages/ShiftsPage";
 import { HomePage } from "@/features/home/HomePage";
 import { NotFoundPage } from "@/features/home/NotFoundPage";
+import { ShopNowPage } from "@/features/shopnow/pages/ShopNowPage";
+import { RedirectIfSignedIn, RequireAuth } from "./guards";
+import { AuthLayout } from "./layouts/AuthLayout";
 import { DashboardLayout, type NavItem } from "./layouts/DashboardLayout";
 import { DriverLayout } from "./layouts/DriverLayout";
 
 const hubNav: NavItem[] = [
-  { to: "/hub", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/hub/routes", label: "Route planning", icon: Route },
-  { to: "/hub/tracking", label: "Delivery tracking", icon: MapPinned },
-  { to: "/hub/incidents", label: "Incidents", icon: AlertTriangle },
+  { to: "/hub", label: "Dashboard", end: true },
+  { to: "/hub/incidents", label: "Incidents", permission: "incident.manage" },
+  { to: "/hub/tracking", label: "Delivery tracking" },
+  { to: "/hub/routes", label: "Route planning", permission: "route.plan" },
+  { to: "/reports", label: "Reports", permission: "report.view" },
 ];
 
-const reportsNav: NavItem[] = [{ to: "/reports", label: "Reports", icon: BarChart3, end: true }];
+const reportsNav: NavItem[] = [{ to: "/reports", label: "Overview", end: true }];
 
 const adminNav: NavItem[] = [
-  { to: "/admin", label: "Users", icon: Users, end: true },
-  { to: "/admin/roles", label: "Roles & permissions", icon: ShieldCheck },
-  { to: "/admin/hubs", label: "Hubs & areas", icon: Building2 },
-  { to: "/admin/shifts", label: "Shifts", icon: CalendarClock },
-  { to: "/admin/settings", label: "Settings", icon: SlidersHorizontal },
+  { to: "/admin", label: "Users", end: true, permission: "user.manage" },
+  { to: "/admin/roles", label: "Roles & permissions", permission: "role.manage" },
+  { to: "/admin/hubs", label: "Hubs & areas", permission: "hub.manage" },
+  { to: "/admin/shifts", label: "Shifts", permission: "hub.manage" },
+  { to: "/admin/settings", label: "Settings", permission: "settings.manage" },
 ];
 
 const soon = (title: string, phase: string, description?: string) => (
@@ -42,64 +46,86 @@ const soon = (title: string, phase: string, description?: string) => (
 export const router = createBrowserRouter([
   { path: "/", element: <HomePage /> },
   {
-    path: "/login",
-    element: (
-      <div className="mx-auto max-w-md p-6">
-        {soon("Sign in", "Phase 1", "Email or phone + password, with quick demo login per role.")}
-      </div>
-    ),
+    element: <RedirectIfSignedIn />,
+    children: [
+      {
+        element: <AuthLayout />,
+        children: [
+          { path: "/login", element: <LoginPage /> },
+          { path: "/register", element: <RegisterPage /> },
+          { path: "/forgot-password", element: <ForgotPasswordPage /> },
+        ],
+      },
+    ],
   },
+  { element: <AuthLayout />, children: [{ path: "/verify", element: <VerifyOtpPage /> }] },
   {
     path: "/driver",
-    element: <DriverLayout />,
+    element: (
+      <RequireAuth permission="shift.register">
+        <DriverLayout />
+      </RequireAuth>
+    ),
     children: [
-      { index: true, element: soon("Driver home", "Phase 1", "Today's shift and availability (D-04).") },
-      { path: "route", element: soon("Today's route", "Phase 2", "Map and stop list (D-07).") },
-      { path: "orders", element: soon("My orders", "Phase 2", "Order detail and status (D-08).") },
-      { path: "profile", element: soon("Profile", "Phase 2", "Profile and password (D-15).") },
+      { index: true, element: <DriverHomePage /> },
+      { path: "shifts", element: <ShiftsPage /> },
+      { path: "orders", element: soon("My orders", "Phase 2", "Offers, order detail, scan, delivery and incidents (D-06..D-14).") },
+      { path: "profile", element: <ProfilePage /> },
     ],
   },
   {
     path: "/hub",
-    element: <DashboardLayout title="Hub" nav={hubNav} />,
+    element: (
+      <RequireAuth permission="hub.dashboard.view">
+        <DashboardLayout title="Hub" nav={hubNav} />
+      </RequireAuth>
+    ),
     children: [
-      { index: true, element: soon("Hub dashboard", "Phase 2", "KPIs, order table, alerts (H-01).") },
-      { path: "routes", element: soon("Route planning", "Phase 3", "Optimise and reorder (H-02).") },
-      { path: "tracking", element: soon("Delivery tracking", "Phase 2", "Live map (H-03).") },
-      { path: "incidents", element: soon("Incidents", "Phase 2", "Classify and resolve (H-04..H-08).") },
+      { index: true, element: soon("Hub dashboard", "Phase 2", "KPIs, order table and live alerts (H-01).") },
+      { path: "incidents", element: soon("Incidents", "Phase 2", "Classify, respond, reroute or reassign (H-04..H-08).") },
+      { path: "tracking", element: soon("Delivery tracking", "Phase 2", "Live map and order timeline (H-03).") },
+      { path: "routes", element: soon("Route planning", "Phase 3", "Optimise and reorder stops (H-02).") },
     ],
   },
   {
     path: "/reports",
-    element: <DashboardLayout title="Reports" nav={reportsNav} />,
-    children: [
-      { index: true, element: soon("Reports", "Phase 3", "Filters, charts and export (E-01, E-02).") },
-    ],
+    element: (
+      <RequireAuth permission="report.view">
+        <DashboardLayout title="Reports" nav={reportsNav} />
+      </RequireAuth>
+    ),
+    children: [{ index: true, element: soon("Reports", "Phase 3", "Filters, charts and export (E-01, E-02).") }],
   },
   {
     path: "/admin",
-    element: <DashboardLayout title="System admin" nav={adminNav} />,
+    element: (
+      <RequireAuth permission="user.manage">
+        <DashboardLayout title="System admin" nav={adminNav} />
+      </RequireAuth>
+    ),
     children: [
-      { index: true, element: soon("Users", "Phase 1", "Create, edit, lock accounts (A-01, A-02).") },
-      { path: "roles", element: soon("Roles & permissions", "Phase 1", "Permission matrix (A-03).") },
+      { index: true, element: <UsersPage /> },
+      { path: "users/new", element: <UserFormPage /> },
+      { path: "users/:userId", element: <UserFormPage /> },
+      {
+        path: "roles",
+        element: (
+          <RequireAuth permission="role.manage">
+            <RolesPage />
+          </RequireAuth>
+        ),
+      },
       { path: "hubs", element: soon("Hubs & areas", "Phase 3", "(A-04)") },
-      { path: "shifts", element: soon("Shifts", "Phase 3", "(A-05)") },
-      { path: "settings", element: soon("Settings", "Phase 3", "Dispatch, ETA, SLA (A-06).") },
+      { path: "shifts", element: soon("Shifts", "Phase 3", "Shift times and capacity (A-05).") },
+      { path: "settings", element: soon("Settings", "Phase 3", "Dispatch weights, timeouts, SLA (A-06).") },
     ],
   },
-  {
-    path: "/shopnow",
-    element: (
-      <div className="mx-auto max-w-3xl p-6">
-        {soon("ShopNow simulator", "Phase 1", "Create orders through the partner API (S-01, S-02).")}
-      </div>
-    ),
-  },
+  { path: "/shopnow", element: <ShopNowPage /> },
   {
     path: "/track/:waybill",
     element: (
       <div className="mx-auto max-w-md p-6">
-        {soon("Track your parcel", "Phase 2", "Customer view from ShopNow webhooks (S-03).")}
+        {soon("Track your parcel", "Phase 2", "Customer view built from ShopNow webhooks (S-03).")}
       </div>
     ),
   },

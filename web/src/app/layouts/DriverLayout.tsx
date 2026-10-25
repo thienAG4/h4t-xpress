@@ -1,42 +1,38 @@
-import { House, ListChecks, Map, UserRound } from "lucide-react";
+// DriverLayout - mobile-first shell of the driver PWA (390px design) with a text tab bar
+
 import { NavLink, Outlet } from "react-router";
 import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/cn";
 
-const tabs = [
-  { to: "/driver", label: "Home", icon: House, end: true },
-  { to: "/driver/route", label: "Route", icon: Map },
-  { to: "/driver/orders", label: "Orders", icon: ListChecks },
-  { to: "/driver/profile", label: "Profile", icon: UserRound },
+const TABS = [
+  { to: "/driver", label: "Home", end: true },
+  { to: "/driver/orders", label: "Orders" },
+  { to: "/driver/shifts", label: "Shifts" },
+  { to: "/driver/profile", label: "Profile" },
 ];
 
-/** Mobile-first shell for the driver PWA: designed at 390px with a bottom tab bar. */
 export function DriverLayout() {
   return (
-    <div className="mx-auto flex min-h-full max-w-[430px] flex-col bg-white shadow-sm">
-      <header className="flex h-14 items-center border-b border-neutral-200 px-4">
-        <Logo className="text-sm" />
+    <div className="mx-auto flex min-h-full max-w-[430px] flex-col bg-neutral-50 shadow-sm">
+      <header className="sticky top-0 z-10 flex h-14 items-center border-b border-line bg-white px-4">
+        <Logo className="text-base" />
       </header>
-      <main className="flex-1 p-4">
+      <main className="flex-1 p-4 pb-6">
         <Outlet />
       </main>
-      <nav
-        className="sticky bottom-0 grid grid-cols-4 border-t border-neutral-200 bg-white"
-        aria-label="Driver"
-      >
-        {tabs.map(({ to, label, icon: Icon, end }) => (
+      <nav className="sticky bottom-0 grid grid-cols-4 border-t border-line bg-white" aria-label="Driver">
+        {TABS.map(({ to, label, end }) => (
           <NavLink
             key={to}
             to={to}
             end={end}
             className={({ isActive }) =>
               cn(
-                "flex flex-col items-center gap-1 py-2 text-xs",
-                isActive ? "text-primary-600" : "text-neutral-500",
+                "py-3 text-center text-sm font-medium",
+                isActive ? "border-t-2 border-primary-600 text-primary-600" : "border-t-2 border-transparent text-neutral-500",
               )
             }
           >
-            <Icon className="size-5" aria-hidden />
             {label}
           </NavLink>
         ))}

@@ -1,15 +1,11 @@
-import { Truck } from "lucide-react";
+// Logo - text wordmark "H4T Xpress" (no image or icon)
+
 import { cn } from "@/lib/cn";
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-2 font-display font-semibold", className)}>
-      <span className="grid size-8 place-items-center rounded-control bg-primary-600 text-white">
-        <Truck className="size-4" aria-hidden />
-      </span>
-      <span>
-        H4T <span className="text-primary-600">Xpress</span>
-      </span>
+    <span className={cn("font-display text-lg font-extrabold tracking-tight text-ink", className)}>
+      H4T <span className="text-primary-600">Xpress</span>
     </span>
   );
 }

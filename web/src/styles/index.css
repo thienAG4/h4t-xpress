@@ -1,16 +1,16 @@
 @import "tailwindcss";
 @import "@fontsource-variable/inter";
-@import "@fontsource/poppins/500.css";
-@import "@fontsource/poppins/600.css";
-@import "@fontsource/poppins/700.css";
+@import "@fontsource-variable/montserrat";
 
 /*
- * Design tokens (SPEC §4.2). Figma used three blues (#0060F8, #1070F8, #4078F8);
- * they are unified on #1070F8. Exact values will be re-checked against Figma frames.
+ * Design tokens (SPEC §4.2), measured from the Figma file:
+ * - Auth and driver screens: Montserrat, inputs 52px / radius 4px, buttons 50px / radius 10px.
+ * - Hub dashboards use a neutral sans (Roboto in Figma, Inter here).
+ * - Figma used several blues (#0060F8, #1070F8, #1677FF, #3532D7); unified on #1070F8.
  */
 @theme {
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Poppins", "Inter Variable", ui-sans-serif, sans-serif;
+  --font-display: "Montserrat Variable", "Inter Variable", ui-sans-serif, sans-serif;
 
   --color-primary-50: #eaf2ff;
   --color-primary-100: #d4e4fe;
@@ -20,6 +20,10 @@
   --color-primary-700: #0b5ad0;
   --color-primary-800: #0a479f;
 
+  --color-ink: #2a2a2a;
+  --color-line: #e6e7ee;
+  --color-placeholder: #98a1b3;
+
   --color-success-50: #f0fdf4;
   --color-success-500: #22c55e;
   --color-success-700: #15803d;
@@ -27,10 +31,16 @@
   --color-warning-500: #f59e0b;
   --color-warning-700: #b45309;
   --color-danger-50: #fef2f2;
-  --color-danger-500: #ef4444;
+  --color-danger-500: #f8183e;
   --color-danger-700: #b91c1c;
 
-  --radius-control: 8px;
+  /* ShopNow simulator accent (orange from the Figma driver page), never used by H4T. */
+  --color-shop-50: #fff4e5;
+  --color-shop-600: #ec8000;
+  --color-shop-700: #c26900;
+
+  --radius-input: 4px;
+  --radius-button: 10px;
   --radius-card: 12px;
   --radius-sheet: 16px;
 }
@@ -43,7 +53,7 @@
   }
 
   body {
-    @apply bg-neutral-50 font-sans text-neutral-900 antialiased;
+    @apply bg-neutral-50 font-sans text-ink antialiased;
   }
 
   h1,
