@@ -1,7 +1,7 @@
 from functools import lru_cache
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -34,8 +34,20 @@ class Settings(BaseSettings):
 
     demo_mode: bool = True
     demo_password: str = "Demo@12345"
-    jwt_secret: str = "change-me"
     cors_origins: str = "http://localhost:5173,http://localhost:8080"
+
+    # Auth (SPEC §5.2)
+    # Development default only; production must set a random value of 32+ characters.
+    jwt_secret: str = "dev-only-jwt-secret-change-me-in-production-0123456789"
+    jwt_algorithm: str = "HS256"
+    access_token_minutes: int = 15
+    refresh_token_days: int = 7
+    refresh_cookie_name: str = "h4t_refresh"
+    cookie_secure: bool = False
+    otp_ttl_seconds: int = 300
+    otp_resend_cooldown_seconds: int = 60
+    otp_max_attempts: int = 5
+    login_attempts_per_minute: int = 10
 
     file_storage: str = "local"
     upload_dir: str = "uploads"
@@ -51,6 +63,12 @@ class Settings(BaseSettings):
     @classmethod
     def _normalize_database_url(cls, value: str) -> str:
         return normalize_database_url(value)
+
+    @model_validator(mode="after")
+    def _require_strong_secret_in_production(self) -> "Settings":
+        if self.app_env == "production" and len(self.jwt_secret) < 32:
+            raise ValueError("JWT_SECRET must have at least 32 characters in production")
+        return self
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -1,3 +1,6 @@
+"""FastAPI application: middleware, error handlers and module routers."""
+
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -7,9 +10,20 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy import text
 
-from app import __version__
+from app import __version__, models
 from app.core.config import get_settings
 from app.core.db import engine
+from app.core.errors import register_error_handlers
+from app.modules.auth.router import router as auth_router
+from app.modules.drivers.router import router as driver_router
+from app.modules.hubs.router import router as hubs_router
+from app.modules.partner.router import router as partner_router
+from app.modules.rbac.router import router as roles_router
+from app.modules.sim.router import router as sim_router
+from app.modules.users.router import admin_router as admin_users_router
+from app.modules.users.router import me_router
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 
 class HealthOut(BaseModel):
@@ -44,6 +58,9 @@ async def health() -> JSONResponse:
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    # Every model must be loaded so cross-module foreign keys (orders -> route_stops,
+    # delivery_attempt_files -> files, ...) resolve; configure() also fails fast on mapping errors.
+    models.Base.registry.configure()
     app = FastAPI(
         title="H4T Xpress API",
         version=__version__,
@@ -59,11 +76,23 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    register_error_handlers(app)
 
     app.add_api_route("/health", health, methods=["GET"], include_in_schema=False)
 
     api = APIRouter(prefix="/api/v1")
     api.add_api_route("/health", health, methods=["GET"], response_model=HealthOut, tags=["system"])
+    for router in (
+        auth_router,
+        me_router,
+        hubs_router,
+        driver_router,
+        admin_users_router,
+        roles_router,
+        partner_router,
+        sim_router,
+    ):
+        api.include_router(router)
     app.include_router(api)
     return app
 
