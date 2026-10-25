@@ -166,11 +166,13 @@ stateDiagram-v2
     OUT_FOR_DELIVERY --> DELIVERED: Ảnh minh chứng (BR16)
     OUT_FOR_DELIVERY --> DELIVERY_FAILED: Lý do thất bại (BR17)
     OUT_FOR_DELIVERY --> AWAITING_ASSIGNMENT: Sự cố chủ quan → điều phối tài xế khác (BR15)
+    PICKED_UP --> AWAITING_ASSIGNMENT: Sự cố trước khi rời điểm lấy hàng [Đổi]
     DELIVERY_FAILED --> RESCHEDULED: Hẹn giao lại
     RESCHEDULED --> AWAITING_ASSIGNMENT: Đến ngày hẹn
     DELIVERY_FAILED --> RETURNING: Hoàn về Hub
     RETURNING --> RETURNED_TO_HUB: Hub xác nhận
     AWAITING_ASSIGNMENT --> CANCELLED: Đối tác huỷ
+    ON_HOLD --> CANCELLED: Đối tác huỷ
     ASSIGNED --> CANCELLED: Đối tác huỷ
     DELIVERED --> [*]
     RETURNED_TO_HUB --> [*]
@@ -308,6 +310,38 @@ Trạng thái sự cố: `OPEN → IN_REVIEW → RESOLVING → RESOLVED` (hoặc
 - **Chiều vào:** `POST /partner/v1/orders` xác thực bằng API key. Kiểm tra đủ trường bắt buộc (BR2: mã vận đơn, địa chỉ lấy/giao, khối lượng, kích thước, `promised_at`) và chống trùng theo `(partner_id, waybill_code)`. Lỗi trả `422` kèm danh sách trường sai (EX1).
 - **Chiều ra:** mọi thay đổi quan trọng ghi vào bảng outbox `webhook_deliveries` **trong cùng transaction** với thay đổi dữ liệu. Worker gửi đi kèm chữ ký HMAC-SHA256, thử lại với backoff 1 → 5 → 30 phút, tối đa 6 lần, và lưu log để xử lý EX7 / EX11.
 - Các sự kiện: `order.driver_assigned`, `order.status_changed`, `order.eta_changed`, `order.incident`, `order.delivered` (kèm URL ảnh), `order.failed`.
+
+### 3.8. Điều chỉnh khi hiện thực Giai đoạn 2 [Đổi]
+
+Những điểm dưới đây khác hoặc chi tiết hơn so với các mục 3.1–3.7. Code và test bám theo bảng này.
+
+| # | Chủ đề | Quyết định | Lý do |
+|---|---|---|---|
+| P2-1 | Chuyển trạng thái | Thêm `PICKED_UP → AWAITING_ASSIGNMENT`, chỉ dùng khi xử lý sự cố | Tài xế đã quét hàng tại Hub nhưng gặp sự cố trước khi bấm "Start delivery" |
+| P2-2 | Lọc tài xế (BR4) | Lọc theo Hub của tài xế, chưa dùng `area_adjacency` | Seed có 3 Hub tách biệt; điều kiện khu vực kề để Giai đoạn sau |
+| P2-3 | Lời mời gộp | Một lời mời cứu hộ có thể chứa nhiều đơn (`dispatch_offers.bundle_order_ids`) và gắn `incident_id` | Ràng buộc "mỗi tài xế một lời mời chờ" vẫn giữ được khi Hub chuyển nhiều đơn cho tài xế B |
+| P2-4 | Ưu tiên của Hub | Lời mời thủ công thu hồi lời mời tự động đang chờ của tài xế đó và trả đơn kia về hàng điều phối; hai lời mời thủ công cùng lúc thì báo `DRIVER_BUSY` | Khi còn nhiều đơn chờ, tài xế online hầu như luôn đang có lời mời tự động; nếu không ưu tiên thì Hub không chọn được ai |
+| P2-5 | Đơn thuộc sự cố | Đơn có sự cố đang mở do Hub điều phối; engine tự động bỏ qua. Tài xế B từ chối hoặc để hết hạn thì sự cố quay về `IN_REVIEW`, Hub chọn người khác | Tránh việc engine và Hub cùng mời một đơn |
+| P2-6 | Đếm vòng | Chỉ tính các lời mời từ lần gần nhất đơn vào `AWAITING_ASSIGNMENT` | Thả đơn khỏi `ON_HOLD` thì bắt đầu chu kỳ mới, không bị coi là đã hết vòng |
+| P2-7 | Không có ai (EX2) | Thử lại sau `round_retry_delay` và **không** tính là một vòng | Ban đêm không ai online thì đơn chờ, không bị đẩy sang `ON_HOLD` |
+| P2-8 | Quét mã (D-09) | Bản web nhập mã vận đơn bằng tay | Không dùng thư viện đọc mã vạch ở Giai đoạn 2 |
+| P2-9 | Đổi tuyến (H-08) | Đổi thứ tự bằng nút Up/Down thay cho kéo thả; bản đồ vẽ tuyến cũ (đỏ, nét đứt) và mới (xanh) bằng đường thẳng | Dễ dùng bằng bàn phím; tuyến OSRM thật để Giai đoạn 3 |
+| P2-10 | ETA | Dùng công thức dự phòng của §3.3 (haversine × 1.4, 25 km/h, hệ số giờ) và luôn gắn cờ `eta_degraded` | OSRM để Giai đoạn 3; giao diện ghi "(estimate)" |
+| P2-11 | Hiện diện | `POST /driver/heartbeat` mỗi 15 giây thay cho gửi lô vị trí. Trình duyệt chỉ gửi toạ độ khi nằm trong 50 km quanh Hub | Người xem demo ở xa không làm tài xế "bay" khỏi TP.HCM |
+| P2-12 | Giao lại | `RESCHEDULED` tạo một job chạy lúc 07:30 ngày hẹn, thay cho quét mỗi 15 phút | Ít truy vấn hơn, chạy bù được khi máy chủ ngủ |
+| P2-13 | Bản đồ | Tile OSM từ `tile.openstreetmap.de` (FOSSGIS) | DNS của một số nhà mạng Việt Nam không phân giải `tile.openstreetmap.org`; CARTO nay đòi API key |
+| P2-14 | Trang tra cứu | Che tên khách (giữ tên gọi), chỉ dùng webhook có chữ ký hợp lệ | Trang công khai, ai có mã vận đơn cũng xem được |
+
+**Thiết lập chế độ demo** (seed khi `DEMO_MODE=true`):
+
+| Khoá `system_settings` | Demo | Thật |
+|---|---|---|
+| `dispatch.offer_timeout_s` | 30 | 600 |
+| `dispatch.round_retry_delay_s` | 60 | 300 |
+| `dispatch.location_fresh_min` | 720 | 10 |
+| `dispatch.enforce_shift_hours` | false | true |
+
+`driver1` và `driver2` của Hub đầu tiên luôn có ca cả ngày, để kịch bản demo chạy được vào bất kỳ ngày nào.
 
 ---
 
@@ -516,7 +550,7 @@ api/app/
 | GET | `/driver/shifts?from&to` | Ca còn chỗ |
 | GET / POST / DELETE | `/driver/shift-registrations[/{id}]` | Đăng ký / huỷ ca |
 | PUT | `/driver/availability` | `{online: bool}` |
-| POST | `/driver/locations` | Gửi lô vị trí GPS `[{lat,lng,accuracy,recorded_at}]` |
+| POST | `/driver/heartbeat` | `{lat?, lng?, accuracy_m?}` mỗi 15 giây khi online [Đổi, P2-11] |
 | GET | `/driver/offers/current` | Lời mời đang chờ |
 | POST | `/driver/offers/{id}/accept`, `/driver/offers/{id}/decline` | |
 | GET | `/driver/route` | Tuyến hiện tại kèm điểm dừng và đơn |
@@ -525,11 +559,11 @@ api/app/
 | POST | `/driver/route/start` | Rời Hub → các đơn sang `OUT_FOR_DELIVERY` |
 | POST | `/driver/orders/{id}/deliver` | `{photo_file_ids[], note}` → `DELIVERED` |
 | POST | `/driver/orders/{id}/fail` | `{reason, note, proposed_date?}` → `DELIVERY_FAILED` |
-| POST | `/driver/orders/{id}/eta` | `{eta, reason}` |
+| PUT | `/driver/orders/{id}/eta` | `{eta, reason}` |
 | POST | `/driver/orders/{id}/release` | Huỷ nhận đơn trước khi lấy hàng (EX4), `{reason}` |
 | POST | `/driver/incidents` | `{type, description, photo_file_ids[], order_ids[], lat, lng}` |
-| GET | `/driver/incidents/{id}` | Xem phản hồi của Hub |
-| POST | `/files` | Upload ảnh → `file_id` |
+| GET | `/driver/incidents`, `/driver/incidents/{id}` | Sự cố của tôi và phản hồi của Hub |
+| POST | `/files` | Upload ảnh → `file_id`; `GET /files/{id}` trả ảnh (URL khó đoán) |
 
 **Quản lý Hub**
 
@@ -538,14 +572,18 @@ api/app/
 | GET | `/hub/dashboard` | KPI: tổng đơn, theo trạng thái, nguy cơ trễ, sự cố đang mở |
 | GET | `/hub/orders?status&risk&q&page` | Lọc theo trạng thái, "SLA risk" (luồng 2a của UC-02) |
 | GET | `/hub/orders/{id}` | Chi tiết + timeline + vị trí tài xế |
+| GET | `/hub/orders/{id}/candidates` | Ứng viên đã xếp hạng quanh điểm lấy hàng |
 | POST | `/hub/orders/{id}/reassign` | `{driver_id}` gửi lời mời trực tiếp |
-| POST | `/hub/orders/{id}/hold`, `/hub/orders/{id}/release-hold` | `ON_HOLD` ↔ `AWAITING_ASSIGNMENT` |
-| GET | `/hub/drivers?online` | Tài xế của Hub + vị trí + số đơn đang giữ |
+| POST | `/hub/orders/{id}/hold`, `/hub/orders/{id}/release-hold` | `ON_HOLD` ↔ `AWAITING_ASSIGNMENT`, hold cần `{reason}` |
+| POST | `/hub/orders/{id}/returned` | `RETURNING → RETURNED_TO_HUB` |
+| GET | `/hub/drivers` | Tài xế của Hub + vị trí + số đơn đang giữ + ca hôm nay |
+| GET | `/hub/drivers/{id}/route` | Tuyến của một tài xế (giống màn D-07) |
 | GET | `/hub/routes?date`, `/hub/routes/{id}` | |
 | POST | `/hub/routes/{id}/optimize` | Xem trước thứ tự tối ưu từ OSRM `/trip` (chưa lưu) |
 | PUT | `/hub/routes/{id}/stops/order` | `{stop_ids[]}` lưu thứ tự (kéo thả hoặc tối ưu) |
 | POST | `/hub/routes/{id}/publish` | Gửi tuyến xuống tài xế |
-| GET | `/hub/incidents?status&priority&type` | |
+| GET | `/hub/incidents/summary` | Số sự cố theo trạng thái, mức ưu tiên, loại (30 ngày) |
+| GET | `/hub/incidents?status&priority&open_only` | |
 | GET | `/hub/incidents/{id}` | |
 | POST | `/hub/incidents/{id}/classify` | `{category, priority}` |
 | POST | `/hub/incidents/{id}/respond` | `{message}` |
@@ -608,12 +646,12 @@ Một vòng lặp asyncio trong cùng process, lấy job từ bảng `jobs` bằ
 
 | Job | Chu kỳ / kích hoạt | Việc làm |
 |---|---|---|
-| `dispatch.start` | Khi đơn vào `AWAITING_ASSIGNMENT` | Lọc, chấm điểm, mời người đầu tiên |
+| `dispatch.run` | Khi đơn vào `AWAITING_ASSIGNMENT`, sau mỗi lần từ chối/hết hạn, và do sweeper (5 giây) bổ sung | Lọc, chấm điểm, mời người kế tiếp hoặc mở vòng mới |
 | `dispatch.offer_timeout` | Tại `expires_at` của lời mời | Đánh dấu hết hạn, mời người kế tiếp hoặc mở vòng mới |
 | `eta.recompute` | Có GPS mới (≥ 30 giây/tuyến) | Tính lại ETA, phát sự kiện, xếp webhook nếu đổi ≥ 15 phút |
 | `anomaly.scan` | Mỗi 1 phút | BR12: `ETA_ANOMALY`, `DRIVER_IDLE` **[S]** |
-| `webhook.deliver` | Liên tục | Gửi outbox, thử lại với backoff |
-| `reschedule.release` | Mỗi 15 phút | Đưa đơn `RESCHEDULED` đến hạn về `AWAITING_ASSIGNMENT` |
+| `webhook.deliver` | Mỗi 5 giây (cùng nhịp sweeper) | Gửi outbox, thử lại với backoff |
+| `order.reschedule_release` | 07:30 ngày hẹn (một job cho mỗi đơn) | Đưa đơn `RESCHEDULED` về `AWAITING_ASSIGNMENT` |
 | `sim.gps_tick` | Mỗi 3 giây (khi bật) | Di chuyển tài xế demo theo polyline OSRM |
 | `stats.daily_snapshot` | 00:05 hằng ngày | Ghi `daily_driver_stats` phục vụ hiệu suất tài xế và báo cáo **[S]** |
 
@@ -622,7 +660,7 @@ Một vòng lặp asyncio trong cùng process, lấy job từ bảng `jobs` bằ
 | Dịch vụ | Dùng cho | Dự phòng |
 |---|---|---|
 | OSRM (máy chủ demo công khai; có thể tự chạy bằng Docker) | `/route` (polyline, thời lượng), `/table`, `/trip` (tối ưu thứ tự) | Haversine (§3.3); thứ tự tuyến theo nearest-neighbor |
-| OSM tiles | Nền bản đồ | Ghi nguồn đúng theo yêu cầu của OSM |
+| OSM tiles (`tile.openstreetmap.de`) | Nền bản đồ | Ghi nguồn đúng theo yêu cầu của OSM (P2-13) |
 | Cloudinary | Lưu ảnh minh chứng (production) | Dev lưu ổ đĩa local qua interface `FileStorage` |
 
 Ảnh: chỉ nhận JPEG/PNG/WebP, tối đa 5 MB; client nén về cạnh dài 1600 px trước khi tải lên; xoá EXIF trừ thời gian chụp.
