@@ -319,8 +319,8 @@ Trạng thái sự cố: `OPEN → IN_REVIEW → RESOLVING → RESOLVED` (hoặc
 |---|---|
 | Khung | React 19, TypeScript 6 (strict), Vite 8. Chưa dùng TypeScript 7 vì typescript-eslint chưa hỗ trợ |
 | Routing / data | React Router 8, TanStack Query (cache, refetch 60 giây cho dashboard theo UC-02), Zustand (phiên đăng nhập) |
-| UI | Tailwind CSS + shadcn/ui (Radix) tuỳ biến theo token mục 4.2, icon lucide-react |
-| Form | React Hook Form + Zod (kiểm tra trước khi submit, theo "Error Prevention" mục 3.4) |
+| UI | Tailwind CSS 4 + bộ component tự viết trong `components/ui` theo token mục 4.2; **không dùng thư viện icon** (chỉ chữ, huy hiệu màu, công tắc) |
+| Form | Form có kiểm soát + hàm kiểm tra trong `features/*/validation.ts`, cùng luật với API (kiểm tra trước khi submit, theo "Error Prevention" mục 3.4) |
 | Bản đồ | react-leaflet + OSM tiles; polyline tuyến từ OSRM |
 | Biểu đồ | Recharts |
 | Kéo thả | dnd-kit (sắp xếp điểm dừng) |
@@ -341,8 +341,8 @@ Trạng thái sự cố: `OPEN → IN_REVIEW → RESOLVING → RESOLVED` (hoặc
 | `warning` | `#F59E0B` | Có nguy cơ trễ, mức Medium |
 | `danger` | `#EF4444` | Trễ, sự cố High, lỗi |
 | `neutral-*` | thang xám 50–900 | Chữ, viền, nền |
-| Bo góc | 8 px (input, nút), 12 px (card), 16 px (bottom sheet) | |
-| Font | Poppins (tiêu đề) + Inter (nội dung, số liệu) | Xác nhận lại từ Figma |
+| Bo góc | 4 px (ô nhập), 10 px (nút), 12 px (card), 16 px (bottom sheet) | Lấy từ frame đăng nhập trên Figma (ô nhập cao 52 px, nút cao 50 px) |
+| Font | Montserrat (tiêu đề, màn tài xế) + Inter (nội dung, số liệu) | Đã đối chiếu Figma: màn đăng nhập dùng Montserrat, trang Hub dùng Roboto; Poppins không có đủ dấu tiếng Việt |
 | Breakpoint | Driver: thiết kế ở 390 px; Hub/Admin: tối thiểu 1280 px, vẫn dùng được ở 1024 px | NFR-07 |
 
 Component dùng chung: `Button`, `Input`, `Select`, `DatePicker`, `StatusBadge` (màu theo trạng thái đơn và sự cố), `KpiCard`, `DataTable` (lọc, sắp xếp, phân trang), `MapView`, `Timeline` (lịch sử đơn), `BottomSheet` (form sự cố trên mobile), `ConfirmDialog` (mọi thao tác quan trọng, theo mô tả 7.2.1 báo cáo), `Toast`, `EmptyState`, `Skeleton`.
@@ -461,7 +461,8 @@ api/app/
     auth/        đăng ký, OTP, đăng nhập, refresh, quên mật khẩu
     rbac/        roles, permissions, dependency require_permission()
     users/       quản lý tài khoản, hồ sơ tài xế
-    hubs/        hub, khu vực, ca làm, đăng ký ca
+    hubs/        hub, khu vực, ca làm (model + danh sách Hub công khai)
+    drivers/     trang chủ tài xế, đăng ký ca, bật/tắt nhận đơn
     orders/      đơn hàng, máy trạng thái, order_events
     dispatch/    lọc, chấm điểm, lời mời, timeout
     routing/     tuyến, điểm dừng, OSRM client, ETA engine
