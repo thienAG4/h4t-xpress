@@ -1,7 +1,22 @@
-// Admin API - user accounts (A-01, A-02) and the role-permission matrix (A-03)
+// Admin API - users (A-01, A-02), role matrix (A-03), hubs, shifts, settings, audit (A-04..A-07)
 
 import { request } from "@/lib/http";
-import type { Page, Permission, Role, User, UserCreateInput, UserUpdateInput } from "@/types";
+import type {
+  AdminArea,
+  AdminHub,
+  AdminShift,
+  AreaInput,
+  AuditEntry,
+  HubInput,
+  Page,
+  Permission,
+  Role,
+  Setting,
+  ShiftUpdateInput,
+  User,
+  UserCreateInput,
+  UserUpdateInput,
+} from "@/types";
 
 export type UserFilters = {
   q?: string;
@@ -49,4 +64,48 @@ export function updateRolePermissions(roleId: string, permissions: string[], for
     method: "PUT",
     body: { permissions, force_relogin: forceRelogin },
   });
+}
+
+// =============================== Configuration (A-04..A-07) ===============================
+
+export function listAreas(): Promise<AdminArea[]> {
+  return request<AdminArea[]>("/admin/areas");
+}
+
+export function saveArea(data: AreaInput, areaId?: string): Promise<AdminArea> {
+  return areaId
+    ? request<AdminArea>(`/admin/areas/${areaId}`, { method: "PUT", body: data })
+    : request<AdminArea>("/admin/areas", { method: "POST", body: data });
+}
+
+export function listAdminHubs(): Promise<AdminHub[]> {
+  return request<AdminHub[]>("/admin/hubs");
+}
+
+export function saveHub(data: HubInput, hubId?: string): Promise<AdminHub> {
+  return hubId
+    ? request<AdminHub>(`/admin/hubs/${hubId}`, { method: "PUT", body: data })
+    : request<AdminHub>("/admin/hubs", { method: "POST", body: data });
+}
+
+export function listShifts(hubId?: string): Promise<AdminShift[]> {
+  return request<AdminShift[]>("/admin/shifts", { query: { hub_id: hubId } });
+}
+
+export function updateShift(shiftId: string, data: ShiftUpdateInput): Promise<AdminShift> {
+  return request<AdminShift>(`/admin/shifts/${shiftId}`, { method: "PATCH", body: data });
+}
+
+export function listSettings(): Promise<Setting[]> {
+  return request<Setting[]>("/admin/settings");
+}
+
+export function updateSetting(key: string, value: unknown): Promise<Setting> {
+  return request<Setting>(`/admin/settings/${key}`, { method: "PUT", body: { value } });
+}
+
+export type AuditFilters = { page: number; page_size: number; action?: string; entity_type?: string };
+
+export function listAuditLogs(filters: AuditFilters): Promise<Page<AuditEntry>> {
+  return request<Page<AuditEntry>>("/admin/audit-logs", { query: filters });
 }

@@ -60,7 +60,23 @@ async def test_seed_creates_reference_data_and_consistent_history() -> None:
         awaiting = await conn.scalar(
             text("select count(*) from orders where status = 'AWAITING_ASSIGNMENT'")
         )
-        assert awaiting == counts["sim_shopnow_orders"]
+        on_road = await conn.scalar(
+            text(
+                "select count(*) from orders where current_driver_id is not null "
+                "and created_at > now() - interval '1 day' and route_stop_id is not null"
+            )
+        )
+        # ShopNow knows today's waiting orders and the ones already on the road.
+        assert awaiting + on_road == counts["sim_shopnow_orders"]
+        assert counts["routes"] == len(catalog.HUBS) * 3
+        pending_without_order = await conn.scalar(
+            text(
+                "select count(*) from route_stops s where s.status = 'PENDING' and not exists "
+                "(select 1 from orders o where o.route_stop_id = s.id "
+                "and o.status = 'OUT_FOR_DELIVERY')"
+            )
+        )
+        assert pending_without_order == 0
 
 
 async def test_seed_is_skipped_when_data_exists() -> None:

@@ -34,6 +34,8 @@ class Settings(BaseSettings):
 
     demo_mode: bool = True
     demo_password: str = "Demo@12345"
+    # Reload the demo data every day at 03:00 (public demo only; off for local development).
+    demo_daily_reset: bool = False
     cors_origins: str = "http://localhost:5173,http://localhost:8080"
 
     # Auth (SPEC §5.2)
@@ -58,6 +60,18 @@ class Settings(BaseSettings):
 
     seed_history_days: int = 90
     seed_random_seed: int = 11
+
+    # Road routing (SPEC §5.7). The public demo server is fine for a portfolio demo;
+    # `docker compose --profile osrm` runs a local one (OSRM_URL=http://osrm:5000).
+    # Tests turn it off.
+    osrm_enabled: bool = True
+    osrm_url: str = "https://router.project-osrm.org"
+    osrm_timeout_s: float = 4.0
+
+    # Background worker (SPEC §5.6). Tests turn it off and call the job functions directly.
+    worker_enabled: bool = True
+    worker_poll_seconds: float = 1.0
+    worker_sweep_seconds: float = 5.0
 
     @field_validator("database_url")
     @classmethod

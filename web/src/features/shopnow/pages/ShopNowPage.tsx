@@ -62,7 +62,11 @@ export function ShopNowPage() {
       <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6">
         <Alert tone="warning" title="What is this page?">
           ShopNow plays the online shop. Orders created here are sent to H4T Xpress through the same partner
-          API a real platform would use. Status updates arrive back as signed webhooks once dispatching starts.
+          API a real platform would use. Status updates arrive back as signed webhooks once dispatching starts.{" "}
+          <Link to="/shopnow/demo" className="font-semibold underline">
+            Open the demo controls
+          </Link>{" "}
+          to move simulated drivers or stage a traffic jam.
         </Alert>
 
         <CreateOrdersPanel />
@@ -88,7 +92,9 @@ export function ShopNowPage() {
                   {orders.data.items.map((order) => (
                     <tr key={order.waybill_code}>
                       <Td className="font-mono text-xs">
-                        {order.waybill_code}
+                        <Link to={`/track/${order.waybill_code}`} className="font-semibold text-shop-700 hover:underline">
+                          {order.waybill_code}
+                        </Link>
                         {order.priority === "EXPRESS" && (
                           <span className="ml-2">
                             <Badge tone="warning">Express</Badge>

@@ -1,6 +1,7 @@
 """Password hashing, JWT access tokens, refresh tokens and OTP codes (SPEC §5.2)."""
 
 import hashlib
+import hmac
 import secrets
 import uuid
 from dataclasses import dataclass
@@ -37,6 +38,11 @@ def generate_temporary_password() -> str:
 def hash_token(token: str) -> str:
     """One-way hash for API keys, refresh tokens and OTP codes (compared, never shown)."""
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def sign_webhook(body: bytes, secret: str) -> str:
+    """HMAC-SHA256 signature sent in the X-H4T-Signature header of partner webhooks."""
+    return "sha256=" + hmac.new(secret.encode("utf-8"), body, hashlib.sha256).hexdigest()
 
 
 def generate_refresh_token() -> str:

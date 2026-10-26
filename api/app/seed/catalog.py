@@ -202,10 +202,23 @@ def default_settings(demo_mode: bool) -> list[tuple[str, object, str]]:
         ),
         ("dispatch.max_candidates_per_round", 5, "Drivers offered one by one per round (BR6)"),
         ("dispatch.max_rounds", 3, "Rounds before an order is put ON_HOLD (EX3)"),
-        ("dispatch.round_retry_delay_s", 300, "Delay before a new dispatch round"),
+        (
+            "dispatch.round_retry_delay_s",
+            60 if demo_mode else 300,
+            "Delay before a new dispatch round",
+        ),
         ("dispatch.max_active_orders", 20, "Max orders a driver can hold at once"),
         ("dispatch.max_distance_km", 15, "Distance at which the distance score reaches 0"),
-        ("dispatch.location_fresh_min", 10, "GPS ping age that still counts as app open"),
+        (
+            "dispatch.location_fresh_min",
+            720 if demo_mode else 10,
+            "GPS ping age that still counts as app open (relaxed in the demo)",
+        ),
+        (
+            "dispatch.enforce_shift_hours",
+            not demo_mode,
+            "Only drivers inside their shift hours get offers (off in the demo so it works 24/7)",
+        ),
         ("eta.service_time_min", 5, "Minutes spent at each stop"),
         (
             "eta.traffic_factors",
@@ -226,8 +239,15 @@ def default_settings(demo_mode: bool) -> list[tuple[str, object, str]]:
         ("shift.max_days_ahead", 7, "How far ahead drivers can register"),
         ("anomaly.eta_increase_count", 3, "Consecutive ETA increases that raise ETA_ANOMALY"),
         ("anomaly.eta_increase_total_min", 30, "Total ETA increase that raises ETA_ANOMALY"),
-        ("anomaly.idle_minutes", 15, "Minutes without movement that raise DRIVER_IDLE"),
+        (
+            "anomaly.idle_minutes",
+            3 if demo_mode else 15,
+            "Minutes without movement that raise DRIVER_IDLE (short in the demo)",
+        ),
         ("anomaly.idle_radius_m", 50, "Movement below this radius counts as idle"),
+        ("sim.gps_enabled", demo_mode, "GPS simulator moves drivers on the road (demo only)"),
+        ("sim.speed_factor", 4, "Simulated drivers move this many times faster than real time"),
+        ("sim.paused_drivers", {}, "Drivers stopped by the traffic-jam scenario, until when"),
     ]
 
 

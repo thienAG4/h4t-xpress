@@ -19,7 +19,8 @@ ALLOWED_TRANSITIONS: dict[OrderStatus, frozenset[OrderStatus]] = {
     S.AWAITING_ASSIGNMENT: frozenset({S.ASSIGNED, S.ON_HOLD, S.CANCELLED}),
     S.ON_HOLD: frozenset({S.AWAITING_ASSIGNMENT, S.CANCELLED}),
     S.ASSIGNED: frozenset({S.PICKED_UP, S.AWAITING_ASSIGNMENT, S.CANCELLED}),
-    S.PICKED_UP: frozenset({S.OUT_FOR_DELIVERY}),
+    # Back to AWAITING_ASSIGNMENT only through an incident (parcel scanned, driver cannot leave).
+    S.PICKED_UP: frozenset({S.OUT_FOR_DELIVERY, S.AWAITING_ASSIGNMENT}),
     S.OUT_FOR_DELIVERY: frozenset({S.DELIVERED, S.DELIVERY_FAILED, S.AWAITING_ASSIGNMENT}),
     S.DELIVERY_FAILED: frozenset({S.RESCHEDULED, S.RETURNING}),
     S.RESCHEDULED: frozenset({S.AWAITING_ASSIGNMENT}),

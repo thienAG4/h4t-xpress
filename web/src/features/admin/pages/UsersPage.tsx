@@ -1,10 +1,27 @@
-// UsersPage - A-01: search, filter and page through accounts; lock, unlock, reset password
+// UsersPage - A-01 in the style of the Figma back office: account counters, one filter row,
+// the user table with avatars; lock, unlock and reset password
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Lock, Truck, UserCog, Users } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router";
 import { PageHeader } from "@/components/PageHeader";
-import { Alert, Badge, Button, Dialog, EmptyState, Loading, Pagination, SelectField, Table, Td, TextField, Th } from "@/components/ui";
+import {
+  Alert,
+  Avatar,
+  Badge,
+  Button,
+  Dialog,
+  EmptyState,
+  IconTile,
+  Loading,
+  Pagination,
+  SelectField,
+  Table,
+  Td,
+  TextField,
+  Th,
+} from "@/components/ui";
 import { listHubs } from "@/features/auth/api";
 import { errorMessage } from "@/lib/errors";
 import { formatDateTime, formatPhone } from "@/lib/format";
@@ -16,6 +33,30 @@ import { TemporaryPasswordDialog } from "../components/TemporaryPasswordDialog";
 import { ROLE_OPTIONS, STATUS_OPTIONS, STATUS_TONE, roleLabel, statusLabel } from "../constants";
 
 const PAGE_SIZE = 10;
+
+const COUNTERS: { label: string; icon: typeof Users; filters: Partial<UserFilters>; tone: "primary" | "success" | "warning" | "danger" }[] = [
+  { label: "All accounts", icon: Users, filters: {}, tone: "primary" },
+  { label: "Drivers", icon: Truck, filters: { role: "DRIVER" }, tone: "success" },
+  { label: "Hub managers", icon: UserCog, filters: { role: "HUB_MANAGER" }, tone: "warning" },
+  { label: "Locked", icon: Lock, filters: { status: "LOCKED" }, tone: "danger" },
+];
+
+/** Account counters (one small count query each), drawn like the Figma report tiles. */
+function Counter({ label, icon, filters, tone }: (typeof COUNTERS)[number]) {
+  const count = useQuery({
+    queryKey: ["admin", "users", "count", filters],
+    queryFn: () => listUsers({ ...filters, page: 1, page_size: 1 }),
+  });
+  return (
+    <section className="flex items-center gap-4 rounded-2xl border border-line/70 bg-white p-4 shadow-[0_4px_24px_rgba(15,23,42,0.05)]">
+      <IconTile icon={icon} tone={tone} size="lg" />
+      <div>
+        <p className="text-[13px] text-neutral-600">{label}</p>
+        <p className="text-2xl font-bold text-ink tabular-nums">{count.data?.total ?? "-"}</p>
+      </div>
+    </section>
+  );
+}
 
 export function UsersPage() {
   const queryClient = useQueryClient();
@@ -64,15 +105,21 @@ export function UsersPage() {
         actions={
           <Link
             to="/admin/users/new"
-            className="inline-flex h-10 items-center rounded-button bg-primary-600 px-4 text-sm font-semibold text-white hover:bg-primary-700"
+            className="inline-flex h-10 items-center rounded-lg bg-primary-600 px-4 text-sm font-semibold text-white hover:bg-primary-700"
           >
             New user
           </Link>
         }
       />
 
+      <div className="mb-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {COUNTERS.map((counter) => (
+          <Counter key={counter.label} {...counter} />
+        ))}
+      </div>
+
       <form
-        className="mb-4 grid gap-3 rounded-card border border-line bg-white p-4 md:grid-cols-[2fr_1fr_1fr_1fr_auto]"
+        className="mb-4 grid gap-3 rounded-2xl border border-line/70 bg-white p-4 shadow-[0_4px_24px_rgba(15,23,42,0.05)] md:grid-cols-[2fr_1fr_1fr_1fr_auto]"
         onSubmit={(event) => {
           event.preventDefault();
           setFilter("q", search.trim());
@@ -115,9 +162,12 @@ export function UsersPage() {
               {users.data.items.map((user) => (
                 <tr key={user.id} className="hover:bg-neutral-50">
                   <Td>
-                    <Link to={`/admin/users/${user.id}`} className="font-semibold text-ink hover:text-primary-600">
-                      {user.full_name}
-                    </Link>
+                    <span className="flex items-center gap-3">
+                      <Avatar name={user.full_name} />
+                      <Link to={`/admin/users/${user.id}`} className="font-medium text-ink hover:text-primary-600">
+                        {user.full_name}
+                      </Link>
+                    </span>
                   </Td>
                   <Td>
                     <span className="block">{user.email}</span>

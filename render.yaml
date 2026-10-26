@@ -1,0 +1,39 @@
+# Render Blueprint (SPEC §5.11): the API and its background worker run from api/Dockerfile.
+# The database is Neon; paste its connection string into DATABASE_URL when Render asks.
+# Steps: docs/DEPLOY.md
+services:
+  - type: web
+    name: h4t-api
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: main
+    autoDeploy: true
+    dockerContext: ./api
+    dockerfilePath: ./api/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: COOKIE_SECURE
+        value: "true"
+      # The Vercel address, e.g. https://h4t-xpress.vercel.app (used by WebSocket and docs pages)
+      - key: CORS_ORIGINS
+        sync: false
+      - key: DEMO_MODE
+        value: "true"
+      - key: DEMO_DAILY_RESET
+        value: "true"
+      - key: SEED_HISTORY_DAYS
+        value: "60"
+      - key: SHOPNOW_API_KEY
+        generateValue: true
+      - key: SHOPNOW_WEBHOOK_SECRET
+        generateValue: true
+      # This service's own address + /api/v1/sim/shopnow/webhooks
+      - key: SHOPNOW_WEBHOOK_URL
+        sync: false

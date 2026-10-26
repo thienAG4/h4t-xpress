@@ -4,7 +4,7 @@ import json
 
 from httpx import AsyncClient
 
-from app.modules.sim.service import sign_payload
+from app.core.security import sign_webhook
 from tests.helpers import error_code, scalar
 
 SECRET = "shopnow-demo-webhook-secret"
@@ -76,7 +76,7 @@ async def test_webhook_signature_controls_whether_status_is_applied(client: Asyn
     signed = await client.post(
         "/api/v1/sim/shopnow/webhooks",
         content=body,
-        headers={"X-H4T-Signature": sign_payload(body, SECRET)},
+        headers={"X-H4T-Signature": sign_webhook(body, SECRET)},
     )
     assert signed.json()["signature_valid"] is True
     assert await scalar(status, w=waybill) == "ASSIGNED"

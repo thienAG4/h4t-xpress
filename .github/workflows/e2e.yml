@@ -1,0 +1,50 @@
+name: E2E
+
+# Playwright flows (F3, F4 + F5, F8 and back office) against the full Docker stack.
+# Slower than CI, so it runs on pull requests and on demand.
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: Playwright on docker compose
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start db, api and web (waits for the health checks)
+        run: |
+          cp .env.example .env
+          docker compose up -d --build --wait --wait-timeout 600
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: web/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - name: Install dependencies and Chromium
+        working-directory: web
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+      - name: Run the flows
+        working-directory: web
+        env:
+          E2E_CHANNEL: ""
+        run: pnpm e2e
+      - name: API log
+        if: failure()
+        run: docker compose logs api --tail 300
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: web/playwright-report
+          retention-days: 7

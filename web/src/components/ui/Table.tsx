@@ -4,20 +4,27 @@ import type { ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 import { Button } from "./Button";
 
-export function Table({ children }: { children: ReactNode }) {
+/** `framed` draws its own border; inside a Panel pass `framed={false}`. */
+export function Table({ children, framed = true }: { children: ReactNode; framed?: boolean }) {
   return (
-    <div className="overflow-x-auto rounded-card border border-line bg-white">
+    <div
+      className={cn(
+        "overflow-x-auto bg-white",
+        framed && "rounded-2xl border border-line/70 shadow-[0_4px_24px_rgba(15,23,42,0.05)]",
+      )}
+    >
       <table className="w-full min-w-[640px] border-collapse text-left text-sm">{children}</table>
     </div>
   );
 }
 
+// Figma tables: white header with small grey capitals, one hairline per row.
 export function Th({ className, ...props }: ThHTMLAttributes<HTMLTableCellElement>) {
   return (
     <th
       scope="col"
       className={cn(
-        "border-b border-line bg-neutral-50 px-4 py-3 text-xs font-semibold tracking-wide text-neutral-600 uppercase",
+        "border-b border-line bg-white px-4 py-3.5 text-xs font-medium tracking-wide text-neutral-600 uppercase",
         className,
       )}
       {...props}
@@ -26,7 +33,7 @@ export function Th({ className, ...props }: ThHTMLAttributes<HTMLTableCellElemen
 }
 
 export function Td({ className, ...props }: TdHTMLAttributes<HTMLTableCellElement>) {
-  return <td className={cn("border-b border-line px-4 py-3 align-middle", className)} {...props} />;
+  return <td className={cn("border-b border-line px-4 py-3.5 align-middle text-neutral-800", className)} {...props} />;
 }
 
 interface PaginationProps {

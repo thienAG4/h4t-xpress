@@ -21,6 +21,8 @@
   --color-primary-800: #0a479f;
 
   --color-ink: #2a2a2a;
+  /* Page background behind the white dashboard cards. */
+  --color-canvas: #f4f6fa;
   --color-line: #e6e7ee;
   --color-placeholder: #98a1b3;
 
@@ -61,4 +63,13 @@
   h3 {
     @apply font-display;
   }
+}
+
+/* Figma maps are light grey with coloured routes: mute the OpenStreetMap tiles. */
+.map-view .leaflet-tile-pane {
+  filter: grayscale(0.85) brightness(1.04);
+}
+
+.map-view .leaflet-container {
+  font-family: var(--font-sans);
 }
