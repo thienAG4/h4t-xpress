@@ -455,7 +455,7 @@ h4t-xpress/
 - **Errors** are raised as `AppError` subclasses with a stable `code` (for example `SHIFT_FULL`). The web app maps codes to user-facing sentences in `lib/errors.ts`.
 - **Logging** uses a `[function_name]` prefix for business events (`[register_shift] driver=... shift=...`).
 - **Frontend files** start with a one-line comment naming the file and its purpose. API calls live in `features/<area>/api.ts`, React Query hooks in `hooks.ts`, screens in `pages/`.
-- **No icon library**: the UI uses text labels, coloured badges and switches. Map markers are drawn circles (`CircleMarker`), never images.
+- **Figma first**: hub, report and admin screens follow the group's Figma frames. Icons come from `lucide-react` and appear only where Figma has one; people without photos get initials. Map markers are drawn circles (`CircleMarker`), never images.
 - **Realtime**: screens never parse WebSocket payloads. `RealtimeBridge` maps each server event to the React Query keys it invalidates, and the screens refetch.
 - **Background work** goes through the `jobs` table (`worker/jobs.py: enqueue`) inside the caller's transaction, so a job never runs for a change that was rolled back.
 - Formatting and linting: `ruff` and `mypy` for Python; `eslint` and `tsc` for TypeScript.

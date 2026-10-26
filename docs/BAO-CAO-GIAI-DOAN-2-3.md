@@ -115,3 +115,22 @@ Chạy lại E2E: `cd web && pnpm e2e` (Edge có sẵn trên Windows). Chụp l�
 | `7275b6e` | feat(web): Giai đoạn 3: lập tuyến, báo cáo, quản trị, bảng demo, PWA, E2E |
 | `fc13535` | ci: blueprint Render và workflow E2E |
 | (commit cuối) | docs: SPEC §3.9, CHECKLIST, README, DEPLOY, traceability, ADR, ảnh chụp, báo cáo này |
+
+## 10. Cập nhật 26/10: giao diện theo Figma
+
+Theo góp ý "giao diện còn tối giản, cần như Figma", các màn Hub, Nhà quản trị và Admin được dựng lại theo các frame Figma của nhóm (SPEC P3-18 đến P3-21):
+
+| Màn | Đã đổi |
+|---|---|
+| Khung Hub | Thanh menu icon hẹp; thanh trên có ô tìm đơn, nút lọc đơn rủi ro SLA, menu thao tác nhanh "+", chuông sự cố đang mở, menu người dùng |
+| H-01 Dashboard | "Recent orders" có biểu đồ vùng, "Orders by status" dạng vòng, cột "Needs attention" kiểu thẻ "Order Requests", bảng "Latest orders", hai danh sách ở dưới |
+| H-02 Lập tuyến | Bản đồ lớn, danh sách tài xế nổi, thẻ tóm tắt và thanh thời gian, cột "Stops" |
+| H-03 Theo dõi | Thẻ tài xế có icon xe tải và nút Track, bản đồ "Shipment ID" có thẻ tóm tắt, cột "Status" có thanh tiến độ và timeline |
+| H-04, H-05, H-06 Sự cố | "Overview" có 4 thẻ đếm, vòng ưu tiên, bản đồ, tài xế online; "View all incidents" có tìm kiếm, lọc thời gian, tab có icon, phân trang số; "Issue report" có hộp "Resolution action" |
+| E-01 Reports | Bộ lọc dạng viên thuốc, thẻ KPI có đường xu hướng, biểu đồ cột có nền, thanh chuyển màu, top tài xế và Hub kèm tam giác lên/xuống |
+| Khung Reports và Admin | Menu rộng có icon, chữ "H4T XPRESS" đỏ, thẻ bo tròn có bóng; trang Users có 4 thẻ đếm và avatar |
+
+- Quy ước "không icon" được bỏ theo yêu cầu: dùng `lucide-react`, chỉ ở chỗ Figma có icon.
+- Backend thêm hai thứ để các phần tử Figma chạy thật: tìm sự cố theo mã/tài xế/mã vận đơn và theo thời gian (`q`, `days`); chuỗi sản lượng có thêm `on_time`, `returned` cho đường xu hướng.
+- Khối "Quick demo login" ở trang đăng nhập không có trong Figma nhưng được giữ nguyên theo ý bạn, để làm lối vào nhanh cho portfolio.
+- Kiểm thử lại: 119 test backend, 18 test Vitest, 7 luồng E2E đều qua; không màn nào tràn ngang ở 390px và 1024px; 12 ảnh trong README đã chụp lại.

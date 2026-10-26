@@ -49,12 +49,12 @@ Kiểm thử ở cuối giai đoạn này:
 
 | | Màn | Route | Ghi chú |
 |---|---|---|---|
-| [x] | H-01 Dashboard | `/hub` | 5 thẻ KPI, vòng trạng thái (CSS conic-gradient, không dùng thư viện biểu đồ), cột "Needs attention" (đơn rủi ro SLA, sự cố mở), bảng đơn có lọc |
-| [x] | H-02 Lập kế hoạch tuyến | `/hub/routes` | Tuyến hôm nay theo tài xế, quãng đường và thời gian còn lại, nguồn ETA; "Suggest best order" (OSRM `/trip`), đổi thứ tự Up/Down, bản đồ tuyến hiện tại (đỏ, nét đứt) và bản nháp (xanh); lưu là gửi xuống tài xế |
-| [x] | H-03 Theo dõi giao hàng | `/hub/tracking[/:orderId]` | Cột tài xế (lọc Taking orders / With orders / All), bản đồ sống với vị trí cập nhật realtime và đường đi thật, timeline đơn, thao tác: chọn/đổi tài xế, giữ đơn, thả đơn, xác nhận hoàn hàng, ảnh các lần giao |
-| [x] | H-04 Tổng quan sự cố | `/hub/incidents` | KPI theo trạng thái, theo mức ưu tiên, theo loại 30 ngày, sự cố mới nhất |
-| [x] | H-05 Danh sách sự cố | `/hub/incidents/list` | Tab trạng thái, lọc ưu tiên, thẻ sự cố theo frame "View All Incidents" |
-| [x] | H-06 Chi tiết sự cố | `/hub/incidents/:id` | Frame "Issue Report": 3 bước Phân loại → Phản hồi → Giải pháp, lịch sử quyết định |
+| [x] | H-01 Dashboard | `/hub` | Bố cục frame "HUB Dashboard": "Recent orders" (đếm hôm nay, so với 30 ngày trước, biểu đồ vùng đơn theo ngày có con trỏ), "Orders by status" (vòng + chú thích 2 cột), cột "Needs attention" kiểu thẻ "Order Requests" (đơn rủi ro SLA, sự cố mở), bảng "Latest orders" (lọc trạng thái, SLA, tìm từ thanh trên), "Waiting for a driver" và "Routes in progress" |
+| [x] | H-02 Lập kế hoạch tuyến | `/hub/routes` | Bố cục frame "Route Planning": bản đồ lớn, danh sách tài xế nổi bên trái ("Change route"), thẻ tóm tắt và thanh thời gian giữa các điểm ở dưới, cột "Stops" bên phải (Up/Down, giờ ước tính); "Suggest best order" (OSRM `/trip`), tuyến hiện tại đỏ nét đứt, bản nháp xanh; lưu là gửi xuống tài xế |
+| [x] | H-03 Theo dõi giao hàng | `/hub/tracking[/:orderId]` | Bố cục frame "Theo dõi giao hàng": thẻ tài xế có icon xe tải, nút Track, mở ra các điểm dừng và số điện thoại; bản đồ "Shipment ID" với thẻ tóm tắt nổi; cột "Status" có thanh tiến độ, timeline kiểu Figma, "Actions", "Delivery details"; giữ/thả đơn, đổi tài xế, xác nhận hoàn hàng, ảnh các lần giao |
+| [x] | H-04 Tổng quan sự cố | `/hub/incidents` | Bố cục frame "Overview": 4 thẻ đếm, vòng sự cố mở theo ưu tiên, bản đồ tài xế đang chạy (thay "Reach"), tài xế online (thay "Member online"), loại sự cố 30 ngày, bảng sự cố mới nhất có dải tiêu đề màu cam nhạt |
+| [x] | H-05 Danh sách sự cố | `/hub/incidents/list` | Theo frame "View All Incidents": ô tìm (mã sự cố, tài xế, mã vận đơn), lọc ưu tiên có chấm màu, lọc thời gian, tab có icon, thẻ sự cố, phân trang số |
+| [x] | H-06 Chi tiết sự cố | `/hub/incidents/:id` | Bố cục frame "Issue Report": mã có chấm trạng thái, mô tả, ảnh, bản đồ, các kiện; hộp "Resolution action" (liên hệ tài xế, loại, ưu tiên trên một hàng; phản hồi; chọn giải pháp có icon), lịch sử quyết định |
 | [x] | H-07 Đổi tài xế | trong H-06 và H-03 | Bản đồ ứng viên + danh sách xếp hạng, popup "SUCCESS!" |
 | [x] | H-08 Đổi tuyến | trong H-06 | Dùng chung bộ sửa thứ tự với H-02: nút "Suggest best order", Up/Down, bản đồ tuyến cũ (đỏ, nét đứt) và mới (xanh) |
 
@@ -62,14 +62,14 @@ Kiểm thử ở cuối giai đoạn này:
 
 | | Màn | Route | Ghi chú |
 |---|---|---|---|
-| [x] | A-01 Danh sách người dùng | `/admin` | Tìm kiếm, lọc, phân trang, khoá/mở, đặt lại mật khẩu |
+| [x] | A-01 Danh sách người dùng | `/admin` | 4 thẻ đếm (tất cả, tài xế, quản lý Hub, bị khoá), tìm kiếm, lọc, bảng có avatar chữ viết tắt, phân trang, khoá/mở, đặt lại mật khẩu |
 | [x] | A-02 Tạo / sửa người dùng | `/admin/users/new`, `/admin/users/:id` | Mật khẩu tạm chỉ hiện một lần |
 | [x] | A-03 Ma trận phân quyền | `/admin/roles` | Bật/tắt theo vai trò × quyền |
 | [x] | A-04 Hub và khu vực | `/admin/hubs` | Thêm/sửa Hub (mã, tên, địa chỉ, toạ độ, khu vực, trạng thái) và khu vực; tắt Hub thay cho xoá |
 | [x] | A-05 Ca làm | `/admin/shifts` | Lọc theo Hub; sửa giờ, sức chứa, bật/tắt từng ca; giờ sai báo lỗi |
 | [x] | A-06 Tham số hệ thống | `/admin/settings` | Nhóm theo nghiệp vụ (Dispatch, ETA, SLA, Delivery, Shifts, Anomaly, Demo simulator); mỗi khoá có mô tả, luật kiểm tra và thời điểm lưu |
 | [x] | A-07 Nhật ký audit | `/admin/audit` | Lọc theo nhóm hành động, phân trang, xem giá trị trước/sau của từng thay đổi |
-| [x] | E-01 Báo cáo | `/reports` | Bộ lọc một hàng (7/30/90 ngày, khoảng ngày, chọn Hub); 8 thẻ KPI so với kỳ trước ("better/worse"); biểu đồ cột sản lượng có tooltip, chú giải và bảng số liệu; lý do thất bại, đúng hạn theo khu vực; top tài xế và Hub kèm thay đổi thứ hạng |
+| [x] | E-01 Báo cáo | `/reports` | Bố cục frame "Reports": bộ lọc dạng viên thuốc (Timeframe có khoảng ngày tự chọn, Hub chọn nhiều có chip); 6 thẻ KPI bo tròn so với kỳ trước, đường xu hướng cho tổng đơn, tỷ lệ thành công, đúng hạn; "Order volume" có cột nền, chọn ngày/tuần/tháng, bảng số liệu; lý do thất bại và đúng hạn theo khu vực dạng thanh chuyển màu; top tài xế (avatar) và Hub kèm tam giác lên/xuống |
 | [x] | E-02 Xuất file | `/reports` | Excel (mỗi khối một sheet) và PDF (KPI, bảng, biểu đồ, tiếng Việt có dấu); Hub Manager chỉ xem Hub của mình và không có quyền xuất |
 
 ### ShopNow (sàn giả lập) và khách hàng
@@ -84,7 +84,9 @@ Kiểm thử ở cuối giai đoạn này:
 ### Nền tảng giao diện
 
 - [x] Design system theo Figma: Montserrat cho tiêu đề và Inter cho nội dung; màu chính `#1070F8`; ô nhập 52px bo góc 4px; nút 50px bo góc 10px
-- [x] Không dùng thư viện icon, kể cả trên bản đồ: điểm đánh dấu là hình tròn vẽ bằng Leaflet `CircleMarker`
+- [x] Giao diện Hub, Nhà quản trị, Admin dựng lại theo Figma (26/10, P3-18): khung Hub có thanh icon hẹp và thanh trên (tìm đơn, lọc SLA, thao tác nhanh, chuông sự cố, menu người dùng); khung Reports/Admin có menu rộng và chữ "H4T XPRESS" đỏ; thẻ, bảng, huy hiệu viền mảnh theo Figma
+- [x] Icon `lucide-react` chỉ ở chỗ Figma có icon; điểm trên bản đồ vẫn là hình tròn `CircleMarker`
+- [x] Kiểm tra không tràn ngang ở 390px và 1024px cho mọi màn Hub, Reports, Admin
 - [x] Bộ component: thêm `TextAreaField`, `KpiCard`, `StatusBadge`, `Timeline`, `DeliverySteps`, `MapView`, `PhotoPicker`, `CandidatePicker`, `ScreenTitle`
 - [x] Bản đồ Leaflet + OpenStreetMap (tile của FOSSGIS `tile.openstreetmap.de`, vì DNS một số nhà mạng VN không phân giải `tile.openstreetmap.org`); tắt zoom bằng con lăn để trang cuộn bình thường
 - [x] Realtime: một WebSocket mỗi tab, tự kết nối lại; sự kiện từ server làm mới đúng các query liên quan

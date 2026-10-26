@@ -362,10 +362,14 @@ Bổ sung cho §3.3, §5.4–§5.8, §5.11 và §7. Code và test bám theo bả
 | P3-11 | Tham số hệ thống (A-06) | Mỗi khoá có luật kiểm tra riêng; sai trả `SETTING_INVALID`; khoá nội bộ `sim.*` bị ẩn; mọi thay đổi ghi audit | Không nhập được giá trị làm hỏng điều phối |
 | P3-12 | Dữ liệu GPS | Mỗi giờ xoá điểm GPS cũ hơn 7 ngày | Giới hạn 0,5 GB của Neon free (§12) |
 | P3-13 | PWA | `public/sw.js` viết tay thay cho vite-plugin-pwa: trang network-first, `/assets` cache-first, không cache API; chỉ đăng ký ở bản build | Ít phụ thuộc, không vướng phiên bản Vite 8; app tài xế vẫn mở được khi mất mạng |
-| P3-14 | Frontend | Tách code theo trang bằng `React.lazy`; bản đồ chỉ dùng `CircleMarker` và `Polyline` | Tải nhanh trên điện thoại; không cần ảnh marker (quy ước không icon) |
+| P3-14 | Frontend | Tách code theo trang bằng `React.lazy`; bản đồ chỉ dùng `CircleMarker` và `Polyline` | Tải nhanh trên điện thoại; không cần tải ảnh marker |
 | P3-15 | E2E | Playwright chạy trên stack Docker; máy Windows dùng Edge có sẵn, CI dùng Chromium; workflow `e2e.yml` chạy khi mở PR | Chạy local không cần tải trình duyệt |
 | P3-16 | Lưu ảnh | Chỉ có lưu ổ đĩa; trên Render ảnh mất khi khởi động lại | Demo nạp lại mỗi ngày; adapter Cloudinary hoặc S3 để sau |
 | P3-17 | Thống kê tài xế | `daily_driver_stats` được cộng dồn ngay khi nhận, giao, giao lỗi và báo sự cố; không có job `stats.daily_snapshot` | Số liệu luôn đúng tới thời điểm xem |
+| P3-18 | Giao diện theo Figma (26/10) | Màn Hub, Nhà quản trị và Admin dựng lại theo bố cục Figma. Hub: thanh menu icon hẹp, thanh trên có ô tìm đơn, nút lọc SLA, menu thao tác nhanh "+", chuông sự cố đang mở, menu người dùng; thẻ trắng có tiêu đề và "View all". Reports và Admin: menu rộng có icon, chữ "H4T XPRESS" đỏ, thẻ bo tròn có bóng, bộ lọc dạng viên thuốc. Bỏ quy ước "không icon": dùng `lucide-react`, chỉ đặt ở chỗ Figma có icon | Chủ dự án yêu cầu giao diện giống Figma; bản tối giản trước đó bị đánh giá là quá đơn giản |
+| P3-19 | Tìm sự cố (H-05) | `GET /hub/incidents` thêm `q` (mã sự cố, tên tài xế hoặc mã vận đơn) và `days` (báo trong N ngày gần nhất) | Ô tìm kiếm và bộ lọc thời gian của frame "View All Incidents" chạy thật |
+| P3-20 | Đường xu hướng KPI (E-01) | Mỗi điểm của chuỗi sản lượng có thêm `on_time` và `returned`; sparkline của tỷ lệ thành công và đúng hạn tính đúng như KPI | Figma có đường xu hướng dưới thẻ KPI; không vẽ đường cho chỉ số không có dữ liệu theo kỳ |
+| P3-21 | Dữ liệu thay ảnh trong Figma | Ảnh người thật thành chữ viết tắt trên nền màu; ảnh minh hoạ lý do thất bại thành ô icon; thẻ "Revenue Growth" thành "On-time rate"; khối "Reach" thành bản đồ tài xế đang chạy | Demo không có ảnh thật và không quản lý doanh thu |
 
 **Thiết lập chế độ demo bổ sung:** `anomaly.idle_minutes` = 3, `sim.gps_enabled` = true, `sim.speed_factor` = 4. Seed cho tài xế thứ 2–4 của mỗi Hub đang giao sẵn trong ngày, để bản đồ và màn tối ưu tuyến có dữ liệu ngay.
 
@@ -379,7 +383,7 @@ Bổ sung cho §3.3, §5.4–§5.8, §5.11 và §7. Code và test bám theo bả
 |---|---|
 | Khung | React 19, TypeScript 6 (strict), Vite 8. Chưa dùng TypeScript 7 vì typescript-eslint chưa hỗ trợ |
 | Routing / data | React Router 8, TanStack Query (cache, refetch 60 giây cho dashboard theo UC-02), Zustand (phiên đăng nhập) |
-| UI | Tailwind CSS 4 + bộ component tự viết trong `components/ui` theo token mục 4.2; **không dùng thư viện icon** (chỉ chữ, huy hiệu màu, công tắc) |
+| UI | Tailwind CSS 4 + bộ component tự viết trong `components/ui` theo token mục 4.2; icon `lucide-react` đặt ở đúng chỗ Figma có icon [Đổi, P3-18] |
 | Form | Form có kiểm soát + hàm kiểm tra trong `features/*/validation.ts`, cùng luật với API (kiểm tra trước khi submit, theo "Error Prevention" mục 3.4) |
 | Bản đồ | react-leaflet + OSM tiles; polyline tuyến từ OSRM |
 | Biểu đồ | Recharts |
@@ -608,7 +612,7 @@ api/app/
 | POST | `/hub/routes/{id}/optimize` | Xem trước thứ tự tối ưu từ OSRM `/trip` (chưa lưu) |
 | PUT | `/hub/routes/{id}/stops/order` | `{stop_ids[]}` lưu thứ tự, tính lại ETA và gửi ngay xuống tài xế [Đổi, P3-4] |
 | GET | `/hub/incidents/summary` | Số sự cố theo trạng thái, mức ưu tiên, loại (30 ngày) |
-| GET | `/hub/incidents?status&priority&open_only` | |
+| GET | `/hub/incidents?status&priority&open_only&q&days` | `q`: mã sự cố, tên tài xế hoặc mã vận đơn; `days`: báo trong N ngày [P3-19] |
 | GET | `/hub/incidents/{id}` | |
 | POST | `/hub/incidents/{id}/classify` | `{category, priority}` |
 | POST | `/hub/incidents/{id}/respond` | `{message}` |
