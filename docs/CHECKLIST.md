@@ -23,6 +23,7 @@ Kiểm thử ở cuối giai đoạn này:
 |---|---|---|---|
 | [x] | D-01 Đăng ký tài xế | `/register` | Bố cục frame "Let's Get started". Thêm nhóm "Work information" (Hub, biển số, bằng lái) theo Chức năng 1 của báo cáo. Có trạng thái lỗi giống frame "Sign up - Error" |
 | [x] | D-02 Đăng nhập | `/login` | Frame "Welcome Back". Nhập SĐT (`0…` hoặc `+84`) hoặc e-mail. Có khối đăng nhập nhanh demo |
+| [x] | Link demo trực tiếp | `/demo/:role` | `driver`, `hub`, `executive`, `admin`: tự đăng nhập tài khoản demo của vai trò rồi mở trang chính, dùng cho portfolio nhúng iframe. Chờ API thức dậy và chờ khôi phục phiên trước khi đăng nhập |
 | [x] | D-03 Xác thực OTP | `/verify` | 6 ô nhập, dán mã/tự điền từ SMS, đếm ngược gửi lại, báo số lần thử còn lại, banner mã demo |
 | [x] | Quên / đặt lại mật khẩu | `/forgot-password` | Gửi mã rồi đặt mật khẩu mới trên cùng một màn |
 
