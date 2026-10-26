@@ -2,7 +2,9 @@
 
 Last-mile delivery management focused on **handling delivery incidents**: drivers report problems from the road, hub managers reroute or reassign with system suggestions, and customers receive a new ETA and the reason for the delay through the e-commerce partner.
 
-> **Status: all 3 phases built and tested locally.** The partner sends an order, the dispatch engine offers it to the best driver with a countdown, the driver follows a real road route, delivers with a proof photo or reports an incident, the hub reroutes or hands the parcels to another driver, and the customer follows everything on the ShopNow tracking page. Phase 3 added road routing and route optimisation (OSRM), reports with Excel and PDF export, the admin configuration screens, a GPS simulator with anomaly detection, an installable driver app and end-to-end tests. The free-tier deployment is configured ([docs/DEPLOY.md](docs/DEPLOY.md)) but not published yet. Progress per screen: [docs/CHECKLIST.md](docs/CHECKLIST.md).
+> **Live demo: https://h4t-xpress.vercel.app** (sign in with the one-click demo buttons; the free API server sleeps when idle, so the first visit can take up to a minute). API docs: https://h4t-api.onrender.com/api/docs
+>
+> **Status: all 3 phases built, tested and deployed.** The partner sends an order, the dispatch engine offers it to the best driver with a countdown, the driver follows a real road route, delivers with a proof photo or reports an incident, the hub reroutes or hands the parcels to another driver, and the customer follows everything on the ShopNow tracking page. Phase 3 added road routing and route optimisation (OSRM), reports with Excel and PDF export, the admin configuration screens, a GPS simulator with anomaly detection, an installable driver app and end-to-end tests. It runs on free tiers: web on Vercel, API on Render, PostgreSQL on Neon ([docs/DEPLOY.md](docs/DEPLOY.md)). Progress per screen: [docs/CHECKLIST.md](docs/CHECKLIST.md).
 
 *Tiếng Việt:* Hệ thống quản lý giao hàng chặng cuối, tập trung xử lý sự cố khi đang giao. Đặc tả: [docs/SPEC.md](docs/SPEC.md), tiến độ: [docs/CHECKLIST.md](docs/CHECKLIST.md).
 
