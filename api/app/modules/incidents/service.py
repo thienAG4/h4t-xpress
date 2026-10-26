@@ -8,7 +8,7 @@ import logging
 import uuid
 from datetime import timedelta
 
-from sqlalchemy import case, func, select
+from sqlalchemy import case, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.clock import local_datetime, local_today, parse_hhmm, utc_now
@@ -408,6 +408,8 @@ async def list_for_hub(
     status: IncidentStatus | None = None,
     priority: IncidentPriority | None = None,
     open_only: bool = False,
+    q: str | None = None,
+    days: int | None = None,
 ) -> Page[IncidentListItem]:
     order_count = (
         select(func.count())
@@ -426,6 +428,20 @@ async def list_for_hub(
         query = query.where(Incident.status.in_(OPEN_STATUSES))
     if priority:
         query = query.where(Incident.priority == priority)
+    if q and q.strip():
+        # Incident code, driver name or the waybill of one of its parcels.
+        needle = f"%{q.strip()}%"
+        waybill_match = (
+            select(IncidentOrder.incident_id)
+            .join(Order, Order.id == IncidentOrder.order_id)
+            .where(IncidentOrder.incident_id == Incident.id, Order.waybill_code.ilike(needle))
+            .exists()
+        )
+        query = query.where(
+            or_(Incident.code.ilike(needle), User.full_name.ilike(needle), waybill_match)
+        )
+    if days:
+        query = query.where(Incident.reported_at >= utc_now() - timedelta(days=days))
     total = await session.scalar(select(func.count()).select_from(query.subquery())) or 0
     # Open incidents first, then HIGH priority, then newest.
     priority_rank = case(PRIORITY_RANK, value=Incident.priority, else_=len(PRIORITY_RANK))

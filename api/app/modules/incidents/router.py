@@ -3,7 +3,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from app.core.deps import CurrentUser, DbSession, require_hub, require_permission
 from app.core.pagination import Page, PageParams, page_params
@@ -74,8 +74,15 @@ async def list_incidents(
     status: IncidentStatus | None = None,
     priority: IncidentPriority | None = None,
     open_only: bool = False,
+    q: Annotated[str | None, Query(max_length=60)] = None,
+    days: Annotated[int | None, Query(ge=1, le=366)] = None,
 ) -> Page[IncidentListItem]:
-    """Incident list (H-05), open and high priority first."""
+    """
+    Incident list (H-05), open and high priority first.
+
+    Inputs: status, priority, open_only, q (incident code, driver name or waybill),
+            days (reported in the last N days), page, page_size
+    """
     return await service.list_for_hub(
         session,
         require_hub(manager),
@@ -83,6 +90,8 @@ async def list_incidents(
         status=status,
         priority=priority,
         open_only=open_only,
+        q=q,
+        days=days,
     )
 
 

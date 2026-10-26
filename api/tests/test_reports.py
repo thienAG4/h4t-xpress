@@ -32,6 +32,10 @@ async def test_executive_sees_every_hub_and_numbers_match(client: AsyncClient) -
     )
     assert report["summary"]["total_orders"]["value"] == expected
     assert sum(point["orders"] for point in report["volume"]) == expected
+    # The per-day split adds up to the period KPIs.
+    delivered = sum(point["delivered"] for point in report["volume"])
+    assert delivered == report["summary"]["delivered"]["value"]
+    assert all(point["on_time"] <= point["delivered"] for point in report["volume"])
     rate = report["summary"]["success_rate"]["value"]
     assert rate is None or 0 <= rate <= 1
     assert len(report["top_hubs"]) <= 3

@@ -251,25 +251,32 @@ def _label(period: date, granularity: Granularity) -> str:
 
 
 async def volume(
-    session: AsyncSession, scope: ReportScope, granularity: Granularity
+    session: AsyncSession, scope: ReportScope, granularity: Granularity, grace: timedelta
 ) -> list[VolumePoint]:
+    """Per period: created, delivered, delivered on time, returned (feeds the KPI trend lines)."""
     bucket = _bucket(granularity)
+    delivered = Order.status == OrderStatus.DELIVERED
     rows = await session.execute(
         select(
             bucket,
             func.count(),
-            func.count().filter(Order.status == OrderStatus.DELIVERED),
+            func.count().filter(delivered),
+            func.count().filter(delivered, Order.delivered_at <= Order.promised_at + grace),
+            func.count().filter(Order.status == OrderStatus.RETURNED_TO_HUB),
         )
         .where(_orders_in(scope.hub_ids, scope.date_from, scope.date_to))
         .group_by(bucket)
     )
-    counts = {moment.date(): (orders, done) for moment, orders, done in rows}
+    counts = {moment.date(): tuple(values) for moment, *values in rows}
+    empty = (0, 0, 0, 0)
     return [
         VolumePoint(
             period=period,
             label=_label(period, granularity),
-            orders=counts.get(period, (0, 0))[0],
-            delivered=counts.get(period, (0, 0))[1],
+            orders=counts.get(period, empty)[0],
+            delivered=counts.get(period, empty)[1],
+            on_time=counts.get(period, empty)[2],
+            returned=counts.get(period, empty)[3],
         )
         for period in _periods(scope.date_from, scope.date_to, granularity)
     ]
@@ -464,7 +471,7 @@ async def build_report(
     return ReportOut(
         summary=await summary(session, scope, grace),
         granularity=granularity,
-        volume=await volume(session, scope, granularity),
+        volume=await volume(session, scope, granularity, grace),
         failure_reasons=await failure_reasons(session, scope),
         incident_types=await incident_types(session, scope),
         on_time_by_area=await on_time_by_area(session, scope, grace),

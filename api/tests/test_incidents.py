@@ -247,6 +247,16 @@ async def test_hub_summary_and_list(client: AsyncClient) -> None:
     listed = (await client.get(HUB, params={"page_size": 5}, headers=manager)).json()
     assert listed["total"] >= 1 and len(listed["items"]) <= 5
 
+    # Search by code (exact incident) and by period.
+    code = listed["items"][0]["code"]
+    found = (await client.get(HUB, params={"q": code.lower()}, headers=manager)).json()
+    assert [item["code"] for item in found["items"]] == [code]
+    nothing = (await client.get(HUB, params={"q": "no-such-incident"}, headers=manager)).json()
+    assert nothing["total"] == 0
+    recent = (await client.get(HUB, params={"days": 7}, headers=manager)).json()
+    every = (await client.get(HUB, params={"page_size": 1}, headers=manager)).json()
+    assert recent["total"] <= every["total"]
+
     driver = await login(client, DRIVER)
     forbidden = await client.get(f"{HUB}/summary", headers=driver)
     assert forbidden.status_code == 403

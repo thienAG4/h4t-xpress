@@ -41,10 +41,14 @@ class SummaryOut(BaseModel):
 
 
 class VolumePoint(BaseModel):
+    """Orders created in one period and what became of them (same rules as the KPIs)."""
+
     period: date
     label: str
     orders: int
     delivered: int
+    on_time: int
+    returned: int
 
 
 class ShareRow(BaseModel):

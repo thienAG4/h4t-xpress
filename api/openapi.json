@@ -2071,7 +2071,7 @@
           "hub: incidents"
         ],
         "summary": "List Incidents",
-        "description": "Incident list (H-05), open and high priority first.",
+        "description": "Incident list (H-05), open and high priority first.\n\nInputs: status, priority, open_only, q (incident code, driver name or waybill),\n        days (reported in the last N days), page, page_size",
         "operationId": "list_incidents_api_v1_hub_incidents_get",
         "security": [
           {
@@ -2119,6 +2119,41 @@
               "type": "boolean",
               "default": false,
               "title": "Open Only"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 60
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 366,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Days"
             }
           },
           {
@@ -11020,6 +11055,14 @@
           "delivered": {
             "type": "integer",
             "title": "Delivered"
+          },
+          "on_time": {
+            "type": "integer",
+            "title": "On Time"
+          },
+          "returned": {
+            "type": "integer",
+            "title": "Returned"
           }
         },
         "type": "object",
@@ -11027,9 +11070,12 @@
           "period",
           "label",
           "orders",
-          "delivered"
+          "delivered",
+          "on_time",
+          "returned"
         ],
-        "title": "VolumePoint"
+        "title": "VolumePoint",
+        "description": "Orders created in one period and what became of them (same rules as the KPIs)."
       }
     },
     "securitySchemes": {
