@@ -343,6 +343,32 @@ Những điểm dưới đây khác hoặc chi tiết hơn so với các mục 3
 
 `driver1` và `driver2` của Hub đầu tiên luôn có ca cả ngày, để kịch bản demo chạy được vào bất kỳ ngày nào.
 
+### 3.9. Điều chỉnh khi hiện thực Giai đoạn 3 [Đổi]
+
+Bổ sung cho §3.3, §5.4–§5.8, §5.11 và §7. Code và test bám theo bảng này.
+
+| # | Chủ đề | Quyết định | Lý do |
+|---|---|---|---|
+| P3-1 | Định tuyến | Máy chủ OSRM công khai (`/route`, `/trip`), timeout 4 giây, nghỉ 60 giây sau khi lỗi, cache 5 phút. Khi lỗi thì dùng công thức của P2-10 và gắn `eta_degraded` | Không cần API key; demo vẫn chạy khi OSRM chậm hoặc chặn |
+| P3-2 | ETA | Thời lượng đường thật × hệ số giờ cao điểm + 10 phút bốc hàng + 5 phút mỗi điểm dừng. Polyline lưu ở `routes.polyline`; ETA tính lại ngay trong luồng (nhận đơn, giao, sự cố, đổi tuyến, GPS giả lập) thay cho job `eta.recompute` | Bản đồ tài xế và Hub vẽ đúng đường đi; không phải chờ job |
+| P3-3 | OSRM tự chạy | Profile `osrm` gồm `osrm-map` (Debian + osmium, cắt vùng TP.HCM khỏi bản đồ Việt Nam) và `osrm` (dựng đồ thị MLD một lần) | Dựng cả nước cần hơn 8 GB RAM và bị kill khi thử; vùng TP.HCM chạy với khoảng 300 MB |
+| P3-4 | Tối ưu tuyến (H-02) | `POST /optimize` chỉ xem trước và chỉ đề xuất khi nhanh hơn ít nhất 60 giây; vẫn đổi thứ tự bằng Up/Down (P2-9); lưu là gửi ngay xuống tài xế, không có bước `publish` riêng | Tránh đổi thứ tự vô nghĩa; bớt một thao tác cho Hub |
+| P3-5 | Báo cáo (E-01) | Một endpoint `GET /reports` trả mọi khối: KPI kèm kỳ trước cùng độ dài, sản lượng theo ngày/tháng/quý/năm, lý do thất bại và sự cố, tỷ lệ đúng hạn theo khu vực, top tài xế và Hub kèm thay đổi thứ hạng | Màn báo cáo gọi một lần với cùng bộ lọc |
+| P3-6 | Xuất file | xlsx bằng openpyxl; PDF bằng ReportLab với biểu đồ `reportlab.graphics` (không dùng matplotlib); font DejaVu trong image để in đúng dấu tiếng Việt | Image nhỏ, đủ chạy trên Render free 512 MB |
+| P3-7 | Phạm vi báo cáo | Hub Manager luôn bị giới hạn trong Hub của mình; xin Hub khác trả `OUT_OF_SCOPE` (403); khoảng ngày sai trả `DATE_RANGE` | Không lộ số liệu của Hub khác |
+| P3-8 | GPS giả lập | Task asyncio riêng, mỗi 3 giây, ghi vị trí qua service tracking (không gọi HTTP). Chỉ di chuyển tài xế đang có đơn; bỏ qua `driver1`, `driver2` và ai có heartbeat trong 90 giây; giao bằng ảnh mẫu, 10% thất bại và hẹn giao lại | Người xem dùng app thật không bị giả lập đè; OSRM chậm không làm trễ lời mời |
+| P3-9 | Bất thường (BR12) | `anomaly.scan` mỗi phút: `DRIVER_IDLE` khi tài xế đứng yên quá `anomaly.idle_minutes` (demo 3 phút), `ETA_ANOMALY` khi ETA lùi 3 lần liên tiếp. Sự cố có nguồn `SYSTEM` và giữ các đơn liên quan | Kịch bản "kẹt xe" ở S-04 thấy kết quả sau vài phút |
+| P3-10 | Màn S-04 | `/shopnow/demo`: bật/tắt GPS giả lập, tạo kẹt xe cho một tài xế, nạp lại dữ liệu (chỉ System Admin). `DEMO_DAILY_RESET=true` tự nạp lại lúc 03:00 | Bản demo công khai luôn bắt đầu từ dữ liệu sạch |
+| P3-11 | Tham số hệ thống (A-06) | Mỗi khoá có luật kiểm tra riêng; sai trả `SETTING_INVALID`; khoá nội bộ `sim.*` bị ẩn; mọi thay đổi ghi audit | Không nhập được giá trị làm hỏng điều phối |
+| P3-12 | Dữ liệu GPS | Mỗi giờ xoá điểm GPS cũ hơn 7 ngày | Giới hạn 0,5 GB của Neon free (§12) |
+| P3-13 | PWA | `public/sw.js` viết tay thay cho vite-plugin-pwa: trang network-first, `/assets` cache-first, không cache API; chỉ đăng ký ở bản build | Ít phụ thuộc, không vướng phiên bản Vite 8; app tài xế vẫn mở được khi mất mạng |
+| P3-14 | Frontend | Tách code theo trang bằng `React.lazy`; bản đồ chỉ dùng `CircleMarker` và `Polyline` | Tải nhanh trên điện thoại; không cần ảnh marker (quy ước không icon) |
+| P3-15 | E2E | Playwright chạy trên stack Docker; máy Windows dùng Edge có sẵn, CI dùng Chromium; workflow `e2e.yml` chạy khi mở PR | Chạy local không cần tải trình duyệt |
+| P3-16 | Lưu ảnh | Chỉ có lưu ổ đĩa; trên Render ảnh mất khi khởi động lại | Demo nạp lại mỗi ngày; adapter Cloudinary hoặc S3 để sau |
+| P3-17 | Thống kê tài xế | `daily_driver_stats` được cộng dồn ngay khi nhận, giao, giao lỗi và báo sự cố; không có job `stats.daily_snapshot` | Số liệu luôn đúng tới thời điểm xem |
+
+**Thiết lập chế độ demo bổ sung:** `anomaly.idle_minutes` = 3, `sim.gps_enabled` = true, `sim.speed_factor` = 4. Seed cho tài xế thứ 2–4 của mỗi Hub đang giao sẵn trong ngày, để bản đồ và màn tối ưu tuyến có dữ liệu ngay.
+
 ---
 
 ## 4. Frontend
@@ -359,7 +385,7 @@ Những điểm dưới đây khác hoặc chi tiết hơn so với các mục 3
 | Biểu đồ | Recharts |
 | Kéo thả | dnd-kit (sắp xếp điểm dừng) |
 | Quét mã | `@zxing/browser` (camera) + ô nhập tay dự phòng |
-| PWA | vite-plugin-pwa: manifest, icon, cache app shell; chỉ cài được ở nhóm route `/driver` |
+| PWA | `manifest.webmanifest` (mở vào `/driver`) + `sw.js` viết tay cache app shell [Đổi, P3-13] |
 | Test | Vitest + Testing Library; Playwright cho 3 luồng E2E (mục 5.10) |
 
 ### 4.2. Design system (chuẩn hoá từ Figma)
@@ -578,10 +604,9 @@ api/app/
 | POST | `/hub/orders/{id}/returned` | `RETURNING → RETURNED_TO_HUB` |
 | GET | `/hub/drivers` | Tài xế của Hub + vị trí + số đơn đang giữ + ca hôm nay |
 | GET | `/hub/drivers/{id}/route` | Tuyến của một tài xế (giống màn D-07) |
-| GET | `/hub/routes?date`, `/hub/routes/{id}` | |
+| GET | `/hub/routes`, `/hub/routes/{id}` | Tuyến hôm nay của Hub; chi tiết kèm polyline và điểm dừng (`route.plan`) |
 | POST | `/hub/routes/{id}/optimize` | Xem trước thứ tự tối ưu từ OSRM `/trip` (chưa lưu) |
-| PUT | `/hub/routes/{id}/stops/order` | `{stop_ids[]}` lưu thứ tự (kéo thả hoặc tối ưu) |
-| POST | `/hub/routes/{id}/publish` | Gửi tuyến xuống tài xế |
+| PUT | `/hub/routes/{id}/stops/order` | `{stop_ids[]}` lưu thứ tự, tính lại ETA và gửi ngay xuống tài xế [Đổi, P3-4] |
 | GET | `/hub/incidents/summary` | Số sự cố theo trạng thái, mức ưu tiên, loại (30 ngày) |
 | GET | `/hub/incidents?status&priority&open_only` | |
 | GET | `/hub/incidents/{id}` | |
@@ -594,12 +619,8 @@ api/app/
 
 | Method | Path | Mô tả |
 |---|---|---|
-| GET | `/reports/summary?from&to&hub_ids` | Tài xế hoạt động, tổng đơn, thời gian giao trung bình, tỷ lệ thành công/thất bại, tỷ lệ đúng hạn |
-| GET | `/reports/volume?granularity=day\|month\|quarter\|year` | FR-R-01 |
-| GET | `/reports/failure-reasons` | Top lý do thất bại và sự cố |
-| GET | `/reports/on-time-by-area` | FR-R-03 |
-| GET | `/reports/top-drivers`, `/reports/top-hubs` | FR-R-04, FR-R-05 |
-| GET | `/reports/export?format=xlsx\|pdf&…` | FR-R-06 (`report.export`) |
+| GET | `/reports?date_from&date_to&hub_ids&granularity` | Mọi khối của E-01 trong một lần gọi [Đổi, P3-5]: KPI và kỳ trước, sản lượng (FR-R-01), lý do thất bại, đúng hạn theo khu vực (FR-R-03), top tài xế và Hub (FR-R-04, FR-R-05) |
+| GET | `/reports/export?format=xlsx\|pdf&…` | FR-R-06 (`report.export`), ghi audit `report.exported` |
 
 **Quản trị hệ thống**
 
@@ -608,9 +629,10 @@ api/app/
 | CRUD | `/admin/users` | + `POST /admin/users/{id}/lock`, `/unlock`, `/reset-password`, `/revoke-sessions` |
 | GET | `/admin/roles`, `/admin/permissions` | |
 | PUT | `/admin/roles/{id}/permissions` | `{permission_codes[]}` |
-| CRUD | `/admin/hubs`, `/admin/areas`, `/admin/shifts` | |
-| GET / PUT | `/admin/settings` | Tham số điều phối, ETA, SLA |
-| GET | `/admin/audit-logs` | |
+| GET / POST / PUT | `/admin/hubs[/{id}]`, `/admin/areas[/{id}]` | Không xoá cứng |
+| GET / PATCH | `/admin/shifts[/{id}]` | Giờ bắt đầu/kết thúc, sức chứa; giờ sai trả `SHIFT_TIME_INVALID` |
+| GET / PUT | `/admin/settings`, `/admin/settings/{key}` | Tham số điều phối, ETA, SLA, bất thường; có luật kiểm tra [P3-11] |
+| GET | `/admin/audit-logs?action&page` | `action` lọc theo tiền tố, ví dụ `order.` |
 
 **Đối tác (chiều vào, header `X-API-Key`)**
 
@@ -628,8 +650,10 @@ api/app/
 | POST | `/sim/shopnow/webhooks` | Endpoint nhận webhook của ShopNow (lưu để hiển thị) |
 | GET | `/sim/shopnow/orders`, `/sim/shopnow/webhooks` | |
 | GET | `/sim/track/{waybill}` | Dữ liệu trang tra cứu, chỉ dựng từ các webhook ShopNow đã nhận |
-| POST | `/sim/gps/start`, `/sim/gps/stop` | Bật/tắt mô phỏng tài xế di chuyển |
-| POST | `/sim/reset` | Reset dữ liệu demo (SYSTEM_ADMIN) |
+| GET | `/sim/demo` | Trạng thái GPS giả lập và các tài xế đang được mô phỏng |
+| PUT | `/sim/demo/gps` | `{enabled}` bật/tắt GPS giả lập |
+| POST | `/sim/demo/traffic-jam` | `{driver_id}` cho tài xế đứng yên để demo `DRIVER_IDLE` |
+| POST | `/sim/demo/reset` | Nạp lại dữ liệu demo (`settings.manage`) |
 
 Quy ước chung: lỗi trả dạng `{error: {code, message, details}}`; phân trang `?page&page_size` trả `{items, total}`; thời gian lưu UTC theo ISO-8601, hiển thị theo `Asia/Ho_Chi_Minh`. FastAPI tự sinh OpenAPI tại `/api/docs` (đặt dưới `/api` để đi qua được nginx và rewrite của Vercel); repo commit kèm file `openapi.json`.
 
@@ -648,12 +672,13 @@ Một vòng lặp asyncio trong cùng process, lấy job từ bảng `jobs` bằ
 |---|---|---|
 | `dispatch.run` | Khi đơn vào `AWAITING_ASSIGNMENT`, sau mỗi lần từ chối/hết hạn, và do sweeper (5 giây) bổ sung | Lọc, chấm điểm, mời người kế tiếp hoặc mở vòng mới |
 | `dispatch.offer_timeout` | Tại `expires_at` của lời mời | Đánh dấu hết hạn, mời người kế tiếp hoặc mở vòng mới |
-| `eta.recompute` | Có GPS mới (≥ 30 giây/tuyến) | Tính lại ETA, phát sự kiện, xếp webhook nếu đổi ≥ 15 phút |
-| `anomaly.scan` | Mỗi 1 phút | BR12: `ETA_ANOMALY`, `DRIVER_IDLE` **[S]** |
+| (trong luồng) | Nhận đơn, giao, sự cố, đổi tuyến, GPS giả lập | Tính lại ETA, phát sự kiện, xếp webhook nếu đổi ≥ 15 phút [Đổi, P3-2] |
+| `anomaly.scan` | Mỗi 1 phút | BR12: `ETA_ANOMALY`, `DRIVER_IDLE` [P3-9] |
 | `webhook.deliver` | Mỗi 5 giây (cùng nhịp sweeper) | Gửi outbox, thử lại với backoff |
 | `order.reschedule_release` | 07:30 ngày hẹn (một job cho mỗi đơn) | Đưa đơn `RESCHEDULED` về `AWAITING_ASSIGNMENT` |
-| `sim.gps_tick` | Mỗi 3 giây (khi bật) | Di chuyển tài xế demo theo polyline OSRM |
-| `stats.daily_snapshot` | 00:05 hằng ngày | Ghi `daily_driver_stats` phục vụ hiệu suất tài xế và báo cáo **[S]** |
+| `sim.gps_tick` | Mỗi 3 giây (khi bật), task riêng | Di chuyển tài xế demo theo polyline OSRM [P3-8] |
+| `demo.daily_reset` | Kiểm tra mỗi phút, chạy lúc 03:00 khi `DEMO_DAILY_RESET=true` | Nạp lại dữ liệu demo [P3-10] |
+| `tracking.prune` | Mỗi giờ | Xoá điểm GPS cũ hơn 7 ngày [P3-12] |
 
 ### 5.7. Tích hợp ngoài
 
@@ -661,7 +686,7 @@ Một vòng lặp asyncio trong cùng process, lấy job từ bảng `jobs` bằ
 |---|---|---|
 | OSRM (máy chủ demo công khai; có thể tự chạy bằng Docker) | `/route` (polyline, thời lượng), `/table`, `/trip` (tối ưu thứ tự) | Haversine (§3.3); thứ tự tuyến theo nearest-neighbor |
 | OSM tiles (`tile.openstreetmap.de`) | Nền bản đồ | Ghi nguồn đúng theo yêu cầu của OSM (P2-13) |
-| Cloudinary | Lưu ảnh minh chứng (production) | Dev lưu ổ đĩa local qua interface `FileStorage` |
+| Cloudinary | Lưu ảnh minh chứng (production), **chưa làm** [P3-16] | Hiện lưu ổ đĩa (`FILE_STORAGE=local`) |
 
 Ảnh: chỉ nhận JPEG/PNG/WebP, tối đa 5 MB; client nén về cạnh dài 1600 px trước khi tải lên; xoá EXIF trừ thời gian chụp.
 
@@ -669,7 +694,7 @@ Một vòng lặp asyncio trong cùng process, lấy job từ bảng `jobs` bằ
 
 - Chỉ số tính từ `orders`, `order_events`, `incidents`, `delivery_attempts`, có index theo `hub_id` và thời gian.
 - Xuất **xlsx** bằng openpyxl: mỗi khối báo cáo một sheet, có header và định dạng số.
-- Xuất **PDF** bằng ReportLab (thuần Python, chạy được trên Render), gồm KPI, bảng số liệu và biểu đồ dựng bằng matplotlib.
+- Xuất **PDF** bằng ReportLab (thuần Python, chạy được trên Render), gồm KPI, bảng số liệu và biểu đồ dựng bằng `reportlab.graphics` [Đổi, P3-6].
 
 ### 5.9. Lỗi, log, cấu hình
 
@@ -705,7 +730,7 @@ Giới hạn kích thước: `h4t-api` < 300 MB, `h4t-web` < 60 MB (riêng image
 |---|---|---|
 | `docker-compose.yml` | Chạy thử / demo local, giống production | `db` (postgres:16-alpine, volume `pgdata`, healthcheck `pg_isready`); `api` (chỉ khởi động khi `db` healthy); `web` (cổng `8080`, chỉ khởi động khi `api` healthy); volume `uploads` lưu ảnh khi `FILE_STORAGE=local` |
 | `docker-compose.dev.yml` | Phát triển, dùng kèm file trên | `api` mount source + `uvicorn --reload`; `web` chạy `vite dev` có hot reload (cổng 5173); `db` mở cổng 5432 để xem bằng DBeaver/pgAdmin |
-| Profile `osrm` | Tuỳ chọn | Service `osrm` (`osrm/osrm-backend`) với bản đồ Việt Nam đã tiền xử lý, để không phụ thuộc OSRM demo server (§12) |
+| Profile `osrm` | Tuỳ chọn | `osrm-map` cắt vùng TP.HCM khỏi bản đồ Việt Nam (Geofabrik); `osrm` (`project-osrm/osrm-backend`) dựng đồ thị một lần rồi phục vụ ở cổng 5000. Đặt `OSRM_URL=http://osrm:5000` [P3-3] |
 
 Lệnh chuẩn (ghi trong README):
 
@@ -852,7 +877,7 @@ Alembic, mỗi thay đổi lược đồ một revision. Revision đầu tạo t
 
 ### 7.2. GPS giả lập
 
-- Khi bật, mỗi tài xế demo đang `OUT_FOR_DELIVERY` di chuyển dọc polyline OSRM của tuyến với tốc độ 20–35 km/h, gửi vị trí qua đúng endpoint `/driver/locations`.
+- Khi bật, mỗi tài xế demo đang `OUT_FOR_DELIVERY` di chuyển dọc polyline OSRM của tuyến với tốc độ 20–35 km/h (nhân `sim.speed_factor`), ghi vị trí qua service tracking giống heartbeat [Đổi, P3-8].
 - Có nút tạo kịch bản "kẹt xe": tài xế đứng yên. Kịch bản này kích hoạt `DRIVER_IDLE` để demo BR12.
 - Tài xế thật mở PWA trên điện thoại có thể dùng GPS thật (Geolocation API) nếu cấp quyền.
 
@@ -993,7 +1018,7 @@ Quy ước: Conventional Commits; nhánh `main` luôn deploy được; mỗi tí
 | Render free ngủ sau 15 phút | Lần mở đầu chờ 30–60 giây; job nền dừng khi ngủ | Trang chủ FE hiện "Waking up server…"; worker xử lý bù job quá hạn khi thức; README có GIF |
 | 3 tuần là chặt cho phạm vi đã chọn | Trễ hạn | Thứ tự cắt giảm ở §10 |
 | Figma thiếu vài màn và chưa thống nhất | Giao diện lệch phong cách | Design system chung; màn mới dựng từ component có sẵn |
-| Neon free 0,5 GB | `driver_locations` phình to | Dọn dữ liệu > 7 ngày; GPS giả lập chỉ chạy khi bật |
+| Neon free 0,5 GB | `driver_locations` phình to | Job mỗi giờ xoá dữ liệu > 7 ngày (P3-12); GPS giả lập chỉ chạy khi bật và chỉ cho tài xế đang có đơn |
 | Render free chỉ có 512 MB RAM, build Docker chậm | API bị dừng khi hết RAM; mỗi lần deploy mất vài phút | Image slim multi-stage, 1 worker uvicorn, xuất PDF chạy tuần tự; đo RAM bằng `docker stats` trước khi deploy |
 
 **Giả định (đã tự quyết theo mặc định hợp lý; báo lại nếu muốn đổi)**
@@ -1002,7 +1027,7 @@ Quy ước: Conventional Commits; nhánh `main` luôn deploy được; mỗi tí
 2. Đơn vào hệ thống đã ở Hub chặng cuối (bắt đầu từ BPMN 2), chưa làm chặng lấy hàng.
 3. Font Poppins + Inter và màu chủ đạo `#1070F8`. Sẽ đối chiếu lại khi đọc frame đầu tiên bằng Figma MCP.
 4. Hub Manager được xem báo cáo của Hub mình (chỉ đọc), không được xuất file.
-5. Ảnh lưu trên Cloudinary free tier.
+5. Ảnh lưu trên Cloudinary free tier. *(Chưa làm; hiện lưu ổ đĩa, xem P3-16.)*
 6. Thẻ "Revenue Growth" trên Figma đổi thành "On-time Rate".
 
 **Câu hỏi mở (không chặn việc bắt đầu)**
