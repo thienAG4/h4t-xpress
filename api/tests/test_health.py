@@ -17,6 +17,14 @@ async def test_health_reports_database_ok() -> None:
     }
 
 
+async def test_root_opens_the_api_docs() -> None:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/")
+
+    assert response.status_code == 307
+    assert response.headers["location"] == "/api/docs"
+
+
 async def test_container_health_endpoint_is_not_in_openapi() -> None:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         health = await client.get("/health")

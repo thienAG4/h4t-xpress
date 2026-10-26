@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy import text
 
@@ -71,6 +71,11 @@ async def health() -> JSONResponse:
     return JSONResponse(body.model_dump(), status_code=200 if database_ok else 503)
 
 
+async def root() -> RedirectResponse:
+    """Opening the API address in a browser lands on the API documentation."""
+    return RedirectResponse("/api/docs")
+
+
 def create_app() -> FastAPI:
     settings = get_settings()
     # Every model must be loaded so cross-module foreign keys (orders -> route_stops,
@@ -93,6 +98,7 @@ def create_app() -> FastAPI:
     )
     register_error_handlers(app)
 
+    app.add_api_route("/", root, methods=["GET"], include_in_schema=False)
     app.add_api_route("/health", health, methods=["GET"], include_in_schema=False)
     app.include_router(realtime_router)
 

@@ -156,7 +156,7 @@ Quy tắc điều phối và giao hàng đã có test:
 - [x] `docker compose up` chạy cả hệ thống; tự migrate, tự seed khi DB trống, worker chạy cùng API
 - [x] Nginx proxy cả `/api` và `/ws`
 - [x] GitHub Actions: kiểm tra code, type, test (có Postgres), `alembic check`, build image, đẩy lên GHCR khi merge `main`
-- [~] Triển khai Vercel + Render + Neon: đã có `render.yaml`, `web/vercel.json` và hướng dẫn [DEPLOY.md](DEPLOY.md); **cần chủ repo tạo tài khoản và bấm deploy**
+- [x] Triển khai (26/10): web https://h4t-xpress.vercel.app (Vercel), API https://h4t-api.onrender.com (Render, Blueprint `render.yaml`), PostgreSQL trên Neon (Singapore). Đã chạy thử trên trang thật: đăng nhập nhanh cả 4 vai trò, các màn chính, WebSocket, dữ liệu demo
 - [x] Profile OSRM chạy local (`docker compose --profile osrm up -d`): cắt vùng TP.HCM, đã chạy thử `/route` và `/trip`
 - [x] Workflow `e2e.yml` (Playwright trên docker compose, chạy khi mở PR); **chưa chạy trên GitHub** vì chưa push
 - [x] Nginx: MIME type cho manifest, không cache `sw.js` và `index.html`

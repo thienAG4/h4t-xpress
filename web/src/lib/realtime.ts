@@ -15,7 +15,8 @@ const POLICY_VIOLATION = 1008;
 
 function socketUrl(): string {
   // A static host (Vercel) cannot proxy WebSockets, so it may point straight at the API.
-  const configured = import.meta.env.VITE_WS_URL as string | undefined;
+  // trim() also drops a byte order mark that a Windows pipe can add to the variable.
+  const configured = (import.meta.env.VITE_WS_URL as string | undefined)?.trim();
   if (configured) return configured;
   const scheme = window.location.protocol === "https:" ? "wss" : "ws";
   return `${scheme}://${window.location.host}/ws`;

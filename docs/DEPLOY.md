@@ -20,10 +20,12 @@ flowchart LR
 
 Nothing below needs a credit card. The accounts have to be created by the repository owner; no step can be automated from this repository.
 
+**Live since 26/10/2026:** web https://h4t-xpress.vercel.app, API https://h4t-api.onrender.com (opens the API docs), database on Neon (Singapore).
+
 ## 1. Database (Neon)
 
 1. Create a project at https://neon.tech, region **Singapore** (closest to Render Singapore).
-2. Copy the connection string (`postgresql://user:password@host/db?sslmode=require`). The API converts it for asyncpg on its own (`normalize_database_url`), so paste it as it is.
+2. Turn **Connection pooling off** and copy the direct connection string (`postgresql://user:password@host/db?sslmode=require`, host without `-pooler`). The pooled endpoint runs PgBouncer in transaction mode, which breaks asyncpg's prepared statements. The API converts the URL for asyncpg on its own (`normalize_database_url`), so paste it as it is.
 
 ## 2. API (Render)
 
@@ -48,6 +50,18 @@ The free service sleeps after 15 minutes without traffic. The first request afte
 2. If the Render service is not called `h4t-api`, change the `/api/:path*` destination in `vercel.json` to its address.
 3. Environment variable: `VITE_WS_URL=wss://<render-service>.onrender.com/ws`. Vercel cannot proxy WebSockets, so the realtime connection goes straight to Render. It signs in with the access token in its first message, never in the URL.
 4. Deploy, then put the Vercel address in Render's `CORS_ORIGINS`.
+
+From a terminal instead of the dashboard (run inside `web/`):
+
+```bash
+npx vercel@63.1.2 link --yes --project h4t-xpress
+printf 'wss://h4t-api.onrender.com/ws' | npx vercel@63.1.2 env add VITE_WS_URL production
+npx vercel@63.1.2 deploy --prod --yes
+```
+
+- Vercel's upload endpoint refuses CLI versions before 47.2.2; `npx` runs a recent one without touching a global install.
+- Set variables with `printf` (Git Bash). Piping from Windows PowerShell adds a byte order mark, and the browser then treats the WebSocket address as a relative path. The web app now trims the value, but the variable should still be clean.
+- A CLI deployment is not linked to GitHub: after changing `web/`, deploy again, or connect the project to the repository in the Vercel dashboard (Settings > Git) to deploy on every push to `main`.
 
 ## 4. Container images (GHCR)
 

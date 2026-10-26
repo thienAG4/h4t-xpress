@@ -134,3 +134,17 @@ Theo góp ý "giao diện còn tối giản, cần như Figma", các màn Hub, N
 - Backend thêm hai thứ để các phần tử Figma chạy thật: tìm sự cố theo mã/tài xế/mã vận đơn và theo thời gian (`q`, `days`); chuỗi sản lượng có thêm `on_time`, `returned` cho đường xu hướng.
 - Khối "Quick demo login" ở trang đăng nhập không có trong Figma nhưng được giữ nguyên theo ý bạn, để làm lối vào nhanh cho portfolio.
 - Kiểm thử lại: 119 test backend, 18 test Vitest, 7 luồng E2E đều qua; không màn nào tràn ngang ở 390px và 1024px; 12 ảnh trong README đã chụp lại.
+
+## 11. Triển khai (26/10)
+
+| Phần | Nơi chạy | Địa chỉ |
+|---|---|---|
+| Web | Vercel | https://h4t-xpress.vercel.app |
+| API + job nền | Render (free, Docker, Singapore) | https://h4t-api.onrender.com (mở ra trang tài liệu API) |
+| Database | Neon (free, Singapore) | Kết nối trực tiếp, không qua pooler |
+
+- PR #1 đã merge vào `main` sau khi cả 4 check CI (API, Web, E2E, Docker images) đều qua trên GitHub.
+- Đã chạy thử trên trang thật: đăng nhập nhanh cả 4 vai trò, dashboard, theo dõi, lập tuyến, sự cố, báo cáo, admin; WebSocket kết nối được; dữ liệu demo đã nạp.
+- Lỗi gặp khi triển khai: biến `VITE_WS_URL` bị dính ký tự BOM do PowerShell thêm vào khi pipe, làm WebSocket trỏ sai địa chỉ. Đã đặt lại biến và thêm `trim()` phòng lỗi lặp lại.
+- Server Render free ngủ sau 15 phút không có người dùng; lần mở đầu chờ 30 đến 60 giây (trang hiện "Waking up server").
+- Project Vercel được tạo bằng CLI nên chưa tự deploy khi push `main`. Muốn tự động thì vào Vercel > Settings > Git và nối với repo.
