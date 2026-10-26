@@ -4,6 +4,8 @@ Last-mile delivery management focused on **handling delivery incidents**: driver
 
 > **Live demo: https://h4t-xpress.vercel.app** (sign in with the one-click demo buttons; the free API server sleeps when idle, so the first visit can take up to a minute). API docs: https://h4t-api.onrender.com/api/docs
 >
+> Direct demo links skip the login form: [/demo/hub](https://h4t-xpress.vercel.app/demo/hub), [/demo/driver](https://h4t-xpress.vercel.app/demo/driver), [/demo/executive](https://h4t-xpress.vercel.app/demo/executive), [/demo/admin](https://h4t-xpress.vercel.app/demo/admin).
+>
 > **Status: all 3 phases built, tested and deployed.** The partner sends an order, the dispatch engine offers it to the best driver with a countdown, the driver follows a real road route, delivers with a proof photo or reports an incident, the hub reroutes or hands the parcels to another driver, and the customer follows everything on the ShopNow tracking page. Phase 3 added road routing and route optimisation (OSRM), reports with Excel and PDF export, the admin configuration screens, a GPS simulator with anomaly detection, an installable driver app and end-to-end tests. It runs on free tiers: web on Vercel, API on Render, PostgreSQL on Neon ([docs/DEPLOY.md](docs/DEPLOY.md)). Progress per screen: [docs/CHECKLIST.md](docs/CHECKLIST.md).
 
 *Tiếng Việt:* Hệ thống quản lý giao hàng chặng cuối, tập trung xử lý sự cố khi đang giao. Đặc tả: [docs/SPEC.md](docs/SPEC.md), tiến độ: [docs/CHECKLIST.md](docs/CHECKLIST.md).

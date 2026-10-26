@@ -19,6 +19,7 @@ import {
 import { lazy, Suspense, type ComponentType, type ReactNode } from "react";
 import { createBrowserRouter } from "react-router";
 import { Loading } from "@/components/ui";
+import { DemoEntryPage } from "@/features/auth/pages/DemoEntryPage";
 import { ForgotPasswordPage } from "@/features/auth/pages/ForgotPasswordPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
@@ -92,6 +93,8 @@ export const router = createBrowserRouter([
     ],
   },
   { element: <AuthLayout />, children: [{ path: "/verify", element: <VerifyOtpPage /> }] },
+  // Deep link for embeds: signs in as a demo role without the login form.
+  { path: "/demo/:role", element: <DemoEntryPage /> },
   {
     path: "/driver",
     element: guarded("shift.register", <DriverLayout />),
