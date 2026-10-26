@@ -1,4 +1,5 @@
-"""GPS simulator and demo panel (S-04, SPEC §7.2) and the anomaly scan (BR12, EX5, EX6)."""
+"""GPS simulator and demo panel (S-04, SPEC §7.2), the anomaly scan (BR12, EX5, EX6)
+and the GPS history cleanup (SPEC §12)."""
 
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -8,6 +9,7 @@ from httpx import AsyncClient
 from app.core.db import SessionLocal
 from app.modules.sim.gps import _advance, gps
 from app.modules.tracking.anomaly import scan
+from app.modules.tracking.service import prune_locations
 from tests.helpers import DRIVER, out_for_delivery, scalar, sql, user_id
 
 SIMULATED_ON_ROAD = """
@@ -149,3 +151,21 @@ async def test_eta_slipping_three_times_raises_eta_anomaly(client: AsyncClient) 
         await scalar("select active_incident_id from orders where id = :id", id=order_id)
         == anomaly[0].id
     )
+
+
+async def test_old_gps_points_are_pruned() -> None:
+    driver_id = await user_id(DRIVER)
+    now = datetime.now(UTC)
+    for days_ago in (8, 1):
+        await sql(
+            "insert into driver_locations (driver_id, lat, lng, recorded_at, created_at) "
+            "values (:d, 10.9, 106.77, :at, :at)",
+            d=driver_id,
+            at=now - timedelta(days=days_ago),
+        )
+    async with SessionLocal() as session:
+        assert await prune_locations(session) >= 1
+    oldest = await scalar(
+        "select min(recorded_at) from driver_locations where driver_id = :d", d=driver_id
+    )
+    assert oldest > now - timedelta(days=7)

@@ -183,7 +183,10 @@ def to_pdf(report: ReportOut) -> bytes:
     heading = ParagraphStyle("heading", parent=body, fontName=bold, fontSize=11, leading=14,
                              spaceBefore=8, spaceAfter=4)  # fmt: skip
 
-    def table(header: list[str], rows: list[list[str]], widths: list[float]) -> Table:
+    def table(
+        header: list[str], rows: list[list[str]], widths: list[float], text_columns: int = 1
+    ) -> Table:
+        """Numbers are right-aligned; the first `text_columns` columns hold text."""
         data = [header, *[[text(cell) for cell in row] for row in rows]]
         result = Table(data, colWidths=[w * mm for w in widths], repeatRows=1)
         result.setStyle(
@@ -195,7 +198,7 @@ def to_pdf(report: ReportOut) -> bytes:
                     ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor(f"#{PRIMARY}")),
                     ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EAF2FF")),
                     ("LINEBELOW", (0, 0), (-1, -1), 0.25, colors.HexColor("#E6E7EE")),
-                    ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
+                    ("ALIGN", (text_columns, 0), (-1, -1), "RIGHT"),
                     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ]
             )
@@ -246,12 +249,12 @@ def to_pdf(report: ReportOut) -> bytes:
     story.append(table(["#", "Driver", "Hub", "Delivered", "Success", "On time"],
                        [[str(d.rank), d.name, d.hub, str(d.delivered), _percent(d.success_rate),
                          _percent(d.on_time_rate)] for d in report.top_drivers],
-                       [10, 50, 40, 25, 25, 25]))  # fmt: skip
+                       [10, 50, 40, 25, 25, 25], text_columns=3))  # fmt: skip
     story.append(Paragraph("Top hubs", heading))
     story.append(table(["#", "Hub", "Orders", "Delivered", "On time"],
                        [[str(h.rank), h.name, str(h.orders), str(h.delivered),
                          _percent(h.on_time_rate)] for h in report.top_hubs],
-                       [10, 60, 30, 30, 30]))  # fmt: skip
+                       [10, 60, 30, 30, 30], text_columns=2))  # fmt: skip
 
     buffer = io.BytesIO()
     document = SimpleDocTemplate(

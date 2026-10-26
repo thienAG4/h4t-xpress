@@ -29,6 +29,7 @@ from app.modules.sim.demo import maybe_daily_reset
 from app.modules.sim.gps import TICK_SECONDS as GPS_TICK_SECONDS
 from app.modules.sim.gps import gps
 from app.modules.tracking.anomaly import scan as anomaly_scan
+from app.modules.tracking.service import prune_locations
 from app.worker.jobs import DISPATCH_RUN, OFFER_TIMEOUT, RESCHEDULE_RELEASE
 from app.worker.models import Job, JobStatus
 
@@ -38,6 +39,7 @@ MAX_JOB_ATTEMPTS = 5
 RETRY_STEP = timedelta(seconds=10)
 STALE_AFTER = timedelta(minutes=5)  # a RUNNING job this old was left by a crashed process
 ANOMALY_EVERY_SECONDS = 60.0  # anomaly scan (BR12) and the daily demo reset check
+PRUNE_EVERY_SECONDS = 3600.0  # old GPS points
 
 Handler = Callable[[AsyncSession, dict[str, Any]], Awaitable[object]]
 
@@ -143,21 +145,27 @@ class Worker:
     """Started and stopped by the FastAPI lifespan when WORKER_ENABLED is true."""
 
     def __init__(self) -> None:
-        self._task: asyncio.Task[None] | None = None
+        self._tasks: list[asyncio.Task[None]] = []
         self._http: httpx.AsyncClient | None = None
 
     def start(self) -> None:
-        if self._task is None:
+        if not self._tasks:
             self._http = httpx.AsyncClient(timeout=5)
-            self._task = asyncio.create_task(self._loop(), name="h4t-worker")
+            # The GPS simulator calls OSRM and may be slow; it gets its own loop so it
+            # never delays offers, timeouts or webhooks.
+            self._tasks = [
+                asyncio.create_task(self._loop(), name="h4t-worker"),
+                asyncio.create_task(self._gps_loop(), name="h4t-gps-simulator"),
+            ]
             logger.info("[worker] started")
 
     async def stop(self) -> None:
-        if self._task is not None:
-            self._task.cancel()
+        for task in self._tasks:
+            task.cancel()
+        for task in self._tasks:
             with contextlib.suppress(asyncio.CancelledError):
-                await self._task
-            self._task = None
+                await task
+        self._tasks = []
         if self._http is not None:
             await self._http.aclose()
             self._http = None
@@ -176,15 +184,22 @@ class Worker:
         async with SessionLocal() as session:
             await anomaly_scan(session)
 
+    @staticmethod
+    async def _prune_locations() -> None:
+        async with SessionLocal() as session:
+            removed = await prune_locations(session)
+        if removed:
+            logger.info("[worker] removed %d old GPS points", removed)
+
     async def _loop(self) -> None:
         settings = get_settings()
         loop = asyncio.get_running_loop()
         # (seconds between runs, task). A failing task is logged and does not stop the others.
         schedule: list[tuple[float, Callable[[], Awaitable[object]]]] = [
             (settings.worker_sweep_seconds, self._periodic),
-            (GPS_TICK_SECONDS, gps.tick),
             (ANOMALY_EVERY_SECONDS, self._scan_anomalies),
             (ANOMALY_EVERY_SECONDS, maybe_daily_reset),
+            (PRUNE_EVERY_SECONDS, self._prune_locations),
         ]
         next_run = [0.0] * len(schedule)
         while True:
@@ -207,6 +222,17 @@ class Worker:
                 ran = 0
             if not ran:
                 await asyncio.sleep(settings.worker_poll_seconds)
+
+    @staticmethod
+    async def _gps_loop() -> None:
+        while True:
+            try:
+                await gps.tick()
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                logger.exception("[worker] GPS simulator tick failed")
+            await asyncio.sleep(GPS_TICK_SECONDS)
 
 
 worker = Worker()

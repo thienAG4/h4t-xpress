@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from itertools import pairwise
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.clock import utc_now
@@ -29,6 +29,7 @@ from app.modules.users.models import DriverProfile
 logger = logging.getLogger(__name__)
 
 LOADING_MINUTES = 10  # scanning parcels at the hub or at a hand-over point
+LOCATION_KEEP_DAYS = 7  # GPS history kept on the free database (SPEC §12)
 
 
 # =============================== Presence ===============================
@@ -56,6 +57,16 @@ async def heartbeat(
             )
         )
     await session.commit()
+
+
+async def prune_locations(session: AsyncSession) -> int:
+    """Delete GPS points older than LOCATION_KEEP_DAYS. Returns how many were removed."""
+    cutoff = utc_now() - timedelta(days=LOCATION_KEEP_DAYS)
+    result = await session.execute(
+        delete(DriverLocation).where(DriverLocation.recorded_at < cutoff)
+    )
+    await session.commit()
+    return result.rowcount or 0  # type: ignore[attr-defined]
 
 
 async def driver_position(

@@ -47,6 +47,60 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # Optional local road routing, so the demo does not depend on the public OSRM server.
+  #   docker compose --profile osrm up -d   then set OSRM_URL=http://osrm:5000 in .env
+  # First start: osrm-map downloads the Vietnam map (about 330 MB) and keeps only the
+  # Ho Chi Minh City area around the demo hubs; osrm then builds its routing graph once.
+  # Later starts reuse the osrm volume and are ready in seconds.
+  osrm-map:
+    image: debian:bookworm-slim
+    profiles: [osrm]
+    environment:
+      OSRM_PBF_URL: ${OSRM_PBF_URL:-https://download.geofabrik.de/asia/vietnam-latest.osm.pbf}
+      OSRM_BBOX: ${OSRM_BBOX:-106.35,10.55,107.05,11.20}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        [ -f /data/area.osm.pbf ] && exit 0
+        apt-get update -qq
+        apt-get install -y -qq --no-install-recommends osmium-tool wget ca-certificates > /dev/null
+        wget -q -O /tmp/region.osm.pbf "$$OSRM_PBF_URL"
+        osmium extract --bbox "$$OSRM_BBOX" /tmp/region.osm.pbf -o /data/area.osm.pbf
+    volumes:
+      - osrm:/data
+
+  osrm:
+    image: ghcr.io/project-osrm/osrm-backend:v6.0.0
+    profiles: [osrm]
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        cd /data
+        if [ ! -f area.osrm.ready ]; then
+          osrm-extract -p /opt/car.lua area.osm.pbf
+          osrm-partition area.osrm
+          osrm-customize area.osrm
+          touch area.osrm.ready
+        fi
+        exec osrm-routed --algorithm mld area.osrm
+    volumes:
+      - osrm:/data
+    ports:
+      - "${OSRM_PORT:-5000}:5000"
+    depends_on:
+      osrm-map:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null 'http://127.0.0.1:5000/route/v1/driving/106.70,10.78;106.72,10.80'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15m
+    restart: unless-stopped
+
 volumes:
   pgdata:
   uploads:
+  osrm:

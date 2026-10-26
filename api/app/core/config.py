@@ -62,7 +62,8 @@ class Settings(BaseSettings):
     seed_random_seed: int = 11
 
     # Road routing (SPEC §5.7). The public demo server is fine for a portfolio demo;
-    # docker-compose.osrm.yml runs a local one. Tests turn it off.
+    # `docker compose --profile osrm` runs a local one (OSRM_URL=http://osrm:5000).
+    # Tests turn it off.
     osrm_enabled: bool = True
     osrm_url: str = "https://router.project-osrm.org"
     osrm_timeout_s: float = 4.0
