@@ -10,7 +10,7 @@ import { useHubDrivers } from "../hooks";
 type Filter = "online" | "busy" | "all";
 
 const FILTERS: { value: Filter; label: string; test: (driver: HubDriverRow) => boolean }[] = [
-  { value: "online", label: "Online", test: (driver) => driver.availability === "ONLINE" },
+  { value: "online", label: "Taking orders", test: (driver) => driver.availability === "ONLINE" },
   { value: "busy", label: "With orders", test: (driver) => driver.active_orders > 0 },
   { value: "all", label: "All", test: () => true },
 ];
@@ -19,7 +19,7 @@ type Props = { selectedId: string | null; onSelect: (driverId: string | null) =>
 
 export function DriversPanel({ selectedId, onSelect }: Props) {
   const drivers = useHubDrivers();
-  const [filter, setFilter] = useState<Filter>("online");
+  const [filter, setFilter] = useState<Filter>("busy");
   const test = FILTERS.find((item) => item.value === filter)?.test ?? (() => true);
   const visible = (drivers.data ?? []).filter(test);
 
@@ -64,7 +64,7 @@ export function DriversPanel({ selectedId, onSelect }: Props) {
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 <Badge tone={driver.availability === "ONLINE" ? "success" : "neutral"}>
-                  {driver.availability === "ONLINE" ? "Online" : "Offline"}
+                  {driver.availability === "ONLINE" ? "Taking orders" : "Not taking orders"}
                 </Badge>
                 <Badge tone="primary">
                   {driver.active_orders} order{driver.active_orders === 1 ? "" : "s"}

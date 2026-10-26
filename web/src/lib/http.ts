@@ -29,10 +29,14 @@ export class ApiError extends Error {
   }
 }
 
+type QueryValue = string | number | boolean | null | undefined;
+// Arrays repeat the key (?hub_ids=a&hub_ids=b), as FastAPI expects for list parameters.
+export type Query = Record<string, QueryValue | string[]>;
+
 type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
-  query?: Record<string, string | number | boolean | null | undefined>;
+  query?: Query;
   // Set to false for sign-in calls: a 401 there means wrong credentials, not an expired token.
   auth?: boolean;
   headers?: Record<string, string>;
@@ -67,10 +71,11 @@ export function refreshSession(): Promise<boolean> {
   return refreshInFlight;
 }
 
-function buildUrl(path: string, query?: RequestOptions["query"]): string {
+function buildUrl(path: string, query?: Query): string {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query ?? {})) {
-    if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
+    if (Array.isArray(value)) value.forEach((item) => params.append(key, item));
+    else if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
   }
   const search = params.toString();
   return `${API_BASE}${path}${search ? `?${search}` : ""}`;
@@ -135,4 +140,30 @@ export async function uploadFile<T>(path: string, file: Blob, filename: string):
     response = await send();
   }
   return parseResponse<T>(response);
+}
+
+/** Download a generated file (reports export) and hand it to the browser as a file save. */
+export async function downloadFile(path: string, query: Query, fallbackName: string): Promise<void> {
+  const send = () => {
+    const token = useSession.getState().accessToken;
+    return fetch(buildUrl(path, query), {
+      credentials: "include",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  };
+  let response = await send();
+  if (response.status === 401 && (await refreshSession())) {
+    response = await send();
+  }
+  if (!response.ok) {
+    await parseResponse<never>(response);
+  }
+  const disposition = response.headers.get("content-disposition") ?? "";
+  const name = /filename="([^"]+)"/.exec(disposition)?.[1] ?? fallbackName;
+  const url = URL.createObjectURL(await response.blob());
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(url);
 }

@@ -1,47 +1,45 @@
-// Router - public pages, sign-in flow and one guarded area per role (SPEC §4.3)
+// Router - public pages, sign-in flow and one guarded area per role (SPEC §4.3).
+// Screens behind sign-in are loaded on demand, so the map library and the hub, report and
+// admin screens are not part of the first download.
 
+import { lazy, Suspense, type ComponentType, type ReactNode } from "react";
 import { createBrowserRouter } from "react-router";
-import { ComingSoon } from "@/components/ComingSoon";
-import { RolesPage } from "@/features/admin/pages/RolesPage";
-import { UserFormPage } from "@/features/admin/pages/UserFormPage";
-import { UsersPage } from "@/features/admin/pages/UsersPage";
+import { Loading } from "@/components/ui";
 import { ForgotPasswordPage } from "@/features/auth/pages/ForgotPasswordPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { VerifyOtpPage } from "@/features/auth/pages/VerifyOtpPage";
-import { DonePage } from "@/features/delivery/pages/DonePage";
-import { EtaPage } from "@/features/delivery/pages/EtaPage";
-import { OrderPage } from "@/features/delivery/pages/OrderPage";
-import { RoutePage } from "@/features/delivery/pages/RoutePage";
-import { StopPage } from "@/features/delivery/pages/StopPage";
 import { DriverHomePage } from "@/features/driver/pages/DriverHomePage";
-import { ProfilePage } from "@/features/driver/pages/ProfilePage";
-import { ShiftsPage } from "@/features/driver/pages/ShiftsPage";
 import { HomePage } from "@/features/home/HomePage";
 import { NotFoundPage } from "@/features/home/NotFoundPage";
-import { HubDashboardPage } from "@/features/hub/pages/HubDashboardPage";
-import { TrackingPage } from "@/features/hub/pages/TrackingPage";
-import { IncidentDetailPage } from "@/features/incidents/pages/IncidentDetailPage";
-import { IncidentListPage } from "@/features/incidents/pages/IncidentListPage";
-import { IncidentsOverviewPage } from "@/features/incidents/pages/IncidentsOverviewPage";
-import { MyIncidentsPage } from "@/features/incidents/pages/MyIncidentsPage";
-import { ReportIncidentPage } from "@/features/incidents/pages/ReportIncidentPage";
-import { ShopNowPage } from "@/features/shopnow/pages/ShopNowPage";
-import { TrackPage } from "@/features/shopnow/pages/TrackPage";
 import { RedirectIfSignedIn, RequireAuth } from "./guards";
 import { AuthLayout } from "./layouts/AuthLayout";
 import { DashboardLayout, type NavItem } from "./layouts/DashboardLayout";
 import { DriverLayout } from "./layouts/DriverLayout";
 
+/** A page module loaded when its route is first opened. */
+function page<T extends Record<string, unknown>>(load: () => Promise<T>, name: keyof T & string) {
+  const Component = lazy(() => load().then((module) => ({ default: module[name] as ComponentType })));
+  return (
+    <Suspense fallback={<Loading />}>
+      <Component />
+    </Suspense>
+  );
+}
+
 const hubNav: NavItem[] = [
   { to: "/hub", label: "Dashboard", end: true },
   { to: "/hub/incidents", label: "Incidents", permission: "incident.manage" },
-  { to: "/hub/tracking", label: "Delivery tracking" },
+  { to: "/hub/tracking", label: "Delivery tracking", permission: "driver.view_hub" },
   { to: "/hub/routes", label: "Route planning", permission: "route.plan" },
   { to: "/reports", label: "Reports", permission: "report.view" },
 ];
 
-const reportsNav: NavItem[] = [{ to: "/reports", label: "Overview", end: true }];
+const reportsNav: NavItem[] = [
+  { to: "/reports", label: "Overview", end: true },
+  // Hub managers also read reports; this takes them back to their hub screens.
+  { to: "/hub", label: "Back to hub", permission: "hub.dashboard.view" },
+];
 
 const adminNav: NavItem[] = [
   { to: "/admin", label: "Users", end: true, permission: "user.manage" },
@@ -49,10 +47,11 @@ const adminNav: NavItem[] = [
   { to: "/admin/hubs", label: "Hubs & areas", permission: "hub.manage" },
   { to: "/admin/shifts", label: "Shifts", permission: "hub.manage" },
   { to: "/admin/settings", label: "Settings", permission: "settings.manage" },
+  { to: "/admin/audit", label: "Audit log", permission: "audit.view" },
 ];
 
-const soon = (title: string, phase: string, description?: string) => (
-  <ComingSoon title={title} phase={phase} description={description} />
+const guarded = (permission: string, element: ReactNode) => (
+  <RequireAuth permission={permission}>{element}</RequireAuth>
 );
 
 // Screen IDs (D-xx, H-xx, E-xx, A-xx, S-xx) refer to SPEC §4.4.
@@ -74,82 +73,100 @@ export const router = createBrowserRouter([
   { element: <AuthLayout />, children: [{ path: "/verify", element: <VerifyOtpPage /> }] },
   {
     path: "/driver",
-    element: (
-      <RequireAuth permission="shift.register">
-        <DriverLayout />
-      </RequireAuth>
-    ),
+    element: guarded("shift.register", <DriverLayout />),
     children: [
       { index: true, element: <DriverHomePage /> },
-      { path: "route", element: <RoutePage /> },
-      { path: "stops/:stopId", element: <StopPage /> },
-      { path: "orders/:orderId", element: <OrderPage /> },
-      { path: "orders/:orderId/eta", element: <EtaPage /> },
-      { path: "orders/:orderId/done", element: <DonePage /> },
-      { path: "incidents", element: <MyIncidentsPage /> },
-      { path: "incidents/new", element: <ReportIncidentPage /> },
-      { path: "shifts", element: <ShiftsPage /> },
-      { path: "profile", element: <ProfilePage /> },
+      { path: "route", element: page(() => import("@/features/delivery/pages/RoutePage"), "RoutePage") },
+      { path: "stops/:stopId", element: page(() => import("@/features/delivery/pages/StopPage"), "StopPage") },
+      { path: "orders/:orderId", element: page(() => import("@/features/delivery/pages/OrderPage"), "OrderPage") },
+      { path: "orders/:orderId/eta", element: page(() => import("@/features/delivery/pages/EtaPage"), "EtaPage") },
+      { path: "orders/:orderId/done", element: page(() => import("@/features/delivery/pages/DonePage"), "DonePage") },
+      {
+        path: "incidents",
+        element: page(() => import("@/features/incidents/pages/MyIncidentsPage"), "MyIncidentsPage"),
+      },
+      {
+        path: "incidents/new",
+        element: page(() => import("@/features/incidents/pages/ReportIncidentPage"), "ReportIncidentPage"),
+      },
+      { path: "shifts", element: page(() => import("@/features/driver/pages/ShiftsPage"), "ShiftsPage") },
+      { path: "profile", element: page(() => import("@/features/driver/pages/ProfilePage"), "ProfilePage") },
     ],
   },
   {
     path: "/hub",
-    element: (
-      <RequireAuth permission="hub.dashboard.view">
-        <DashboardLayout title="Hub" nav={hubNav} />
-      </RequireAuth>
-    ),
+    element: guarded("hub.dashboard.view", <DashboardLayout title="Hub" nav={hubNav} />),
     children: [
-      { index: true, element: <HubDashboardPage /> },
+      { index: true, element: page(() => import("@/features/hub/pages/HubDashboardPage"), "HubDashboardPage") },
       {
         path: "incidents",
         element: <RequireAuth permission="incident.manage" />,
         children: [
-          { index: true, element: <IncidentsOverviewPage /> },
-          { path: "list", element: <IncidentListPage /> },
-          { path: ":incidentId", element: <IncidentDetailPage /> },
+          {
+            index: true,
+            element: page(() => import("@/features/incidents/pages/IncidentsOverviewPage"), "IncidentsOverviewPage"),
+          },
+          {
+            path: "list",
+            element: page(() => import("@/features/incidents/pages/IncidentListPage"), "IncidentListPage"),
+          },
+          {
+            path: ":incidentId",
+            element: page(() => import("@/features/incidents/pages/IncidentDetailPage"), "IncidentDetailPage"),
+          },
         ],
       },
-      { path: "tracking", element: <TrackingPage /> },
-      { path: "tracking/:orderId", element: <TrackingPage /> },
-      { path: "routes", element: soon("Route planning", "Phase 3", "Optimise and reorder stops (H-02).") },
+      {
+        path: "tracking",
+        element: guarded("driver.view_hub", page(() => import("@/features/hub/pages/TrackingPage"), "TrackingPage")),
+      },
+      {
+        path: "tracking/:orderId",
+        element: guarded("driver.view_hub", page(() => import("@/features/hub/pages/TrackingPage"), "TrackingPage")),
+      },
+      {
+        path: "routes",
+        element: guarded("route.plan", page(() => import("@/features/hub/pages/RoutePlanningPage"), "RoutePlanningPage")),
+      },
     ],
   },
   {
     path: "/reports",
-    element: (
-      <RequireAuth permission="report.view">
-        <DashboardLayout title="Reports" nav={reportsNav} />
-      </RequireAuth>
-    ),
-    children: [{ index: true, element: soon("Reports", "Phase 3", "Filters, charts and export (E-01, E-02).") }],
+    element: guarded("report.view", <DashboardLayout title="Reports" nav={reportsNav} />),
+    children: [{ index: true, element: page(() => import("@/features/reports/pages/ReportsPage"), "ReportsPage") }],
   },
   {
     path: "/admin",
-    element: (
-      <RequireAuth permission="user.manage">
-        <DashboardLayout title="System admin" nav={adminNav} />
-      </RequireAuth>
-    ),
+    element: guarded("user.manage", <DashboardLayout title="System admin" nav={adminNav} />),
     children: [
-      { index: true, element: <UsersPage /> },
-      { path: "users/new", element: <UserFormPage /> },
-      { path: "users/:userId", element: <UserFormPage /> },
+      { index: true, element: page(() => import("@/features/admin/pages/UsersPage"), "UsersPage") },
+      { path: "users/new", element: page(() => import("@/features/admin/pages/UserFormPage"), "UserFormPage") },
+      { path: "users/:userId", element: page(() => import("@/features/admin/pages/UserFormPage"), "UserFormPage") },
       {
         path: "roles",
-        element: (
-          <RequireAuth permission="role.manage">
-            <RolesPage />
-          </RequireAuth>
-        ),
+        element: guarded("role.manage", page(() => import("@/features/admin/pages/RolesPage"), "RolesPage")),
       },
-      { path: "hubs", element: soon("Hubs & areas", "Phase 3", "(A-04)") },
-      { path: "shifts", element: soon("Shifts", "Phase 3", "Shift times and capacity (A-05).") },
-      { path: "settings", element: soon("Settings", "Phase 3", "Dispatch weights, timeouts, SLA (A-06).") },
+      {
+        path: "hubs",
+        element: guarded("hub.manage", page(() => import("@/features/admin/pages/HubsPage"), "HubsPage")),
+      },
+      {
+        path: "shifts",
+        element: guarded("hub.manage", page(() => import("@/features/admin/pages/ShiftsPage"), "ShiftsPage")),
+      },
+      {
+        path: "settings",
+        element: guarded("settings.manage", page(() => import("@/features/admin/pages/SettingsPage"), "SettingsPage")),
+      },
+      {
+        path: "audit",
+        element: guarded("audit.view", page(() => import("@/features/admin/pages/AuditPage"), "AuditPage")),
+      },
     ],
   },
-  { path: "/shopnow", element: <ShopNowPage /> },
-  { path: "/track", element: <TrackPage /> },
-  { path: "/track/:waybill", element: <TrackPage /> },
+  { path: "/shopnow", element: page(() => import("@/features/shopnow/pages/ShopNowPage"), "ShopNowPage") },
+  { path: "/shopnow/demo", element: page(() => import("@/features/shopnow/pages/DemoPage"), "DemoPage") },
+  { path: "/track", element: page(() => import("@/features/shopnow/pages/TrackPage"), "TrackPage") },
+  { path: "/track/:waybill", element: page(() => import("@/features/shopnow/pages/TrackPage"), "TrackPage") },
   { path: "*", element: <NotFoundPage /> },
 ]);

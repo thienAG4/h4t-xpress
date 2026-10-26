@@ -1032,6 +1032,136 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hub/routes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Routes
+         * @description Driver routes of the hub for one day (default today), routes with active orders first.
+         *
+         *     Outputs: [{"id", "driver_name", "status", "stops_total", "stops_pending",
+         *                "orders_active", "orders_at_risk", "total_distance_m", "next_eta", ...}]
+         */
+        get: operations["list_routes_api_v1_hub_routes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/routes/{route_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Route
+         * @description Stops with their orders, driver position and the road geometry (encoded polyline).
+         */
+        get: operations["get_route_api_v1_hub_routes__route_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/routes/{route_id}/optimize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Optimize Route
+         * @description Preview the fastest order of the pending stops (OSRM trip, else nearest neighbour).
+         *     Nothing is saved. Errors: NOTHING_TO_OPTIMIZE
+         */
+        post: operations["optimize_route_api_v1_hub_routes__route_id__optimize_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hub/routes/{route_id}/stops/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Save Stop Order
+         * @description Save a new order of the pending stops; ETAs are recomputed and the driver notified.
+         *
+         *     Inputs: {"stop_ids": [...]} (every pending stop exactly once). Errors: STOP_LIST_MISMATCH
+         */
+        put: operations["save_stop_order_api_v1_hub_routes__route_id__stops_order_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Report
+         * @description Every block of the reports page in one call (E-01).
+         *
+         *     Inputs (query): date_from, date_to (default: last 30 days), hub_ids (repeatable;
+         *     a hub manager always gets their own hub), granularity (day | week | month)
+         *     Errors: DATE_RANGE, OUT_OF_SCOPE
+         */
+        get: operations["get_report_api_v1_reports_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Report
+         * @description Download the same report as Excel or PDF (E-02). Needs report.export.
+         */
+        get: operations["export_report_api_v1_reports_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/files": {
         parameters: {
             query?: never;
@@ -1191,6 +1321,187 @@ export interface paths {
         put?: never;
         /** Revoke Sessions */
         post: operations["revoke_sessions_api_v1_admin_users__user_id__revoke_sessions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/areas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Areas */
+        get: operations["list_areas_api_v1_admin_areas_get"];
+        put?: never;
+        /**
+         * Create Area
+         * @description Errors: AREA_CODE_TAKEN
+         */
+        post: operations["create_area_api_v1_admin_areas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/areas/{area_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Area */
+        put: operations["update_area_api_v1_admin_areas__area_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/hubs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Hubs
+         * @description Every hub, active or not, with its area and staff counts.
+         */
+        get: operations["list_hubs_api_v1_admin_hubs_get"];
+        put?: never;
+        /**
+         * Create Hub
+         * @description Errors: HUB_CODE_TAKEN, AREA_NOT_FOUND
+         */
+        post: operations["create_hub_api_v1_admin_hubs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/hubs/{hub_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Hub */
+        put: operations["update_hub_api_v1_admin_hubs__hub_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/shifts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Shifts
+         * @description Shift templates per hub with today's registrations.
+         */
+        get: operations["list_shifts_api_v1_admin_shifts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/shifts/{shift_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Shift
+         * @description Inputs: any of name, start_time, end_time, capacity, is_active. Errors: SHIFT_TIME_INVALID
+         */
+        patch: operations["update_shift_api_v1_admin_shifts__shift_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Settings
+         * @description Dispatch, ETA, SLA, delivery, shift, anomaly and simulator parameters.
+         */
+        get: operations["list_settings_api_v1_admin_settings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settings/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Setting
+         * @description Change one parameter; the new value applies to the next dispatch round or ETA refresh.
+         *
+         *     Errors: SETTING_NOT_FOUND, SETTING_INVALID (with the rule that failed)
+         */
+        put: operations["update_setting_api_v1_admin_settings__key__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/audit-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Audit Logs
+         * @description Newest first. `action` matches a prefix, e.g. "user." or "setting.updated".
+         */
+        get: operations["list_audit_logs_api_v1_admin_audit_logs_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1437,10 +1748,166 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sim/demo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Demo Status
+         * @description GPS simulator state and the drivers it is moving.
+         */
+        get: operations["get_demo_status_api_v1_sim_demo_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sim/demo/gps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Switch Gps
+         * @description Inputs: {"enabled": true}. Simulated drivers move and deliver while it is on.
+         */
+        put: operations["switch_gps_api_v1_sim_demo_gps_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sim/demo/traffic-jam": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Traffic Jam
+         * @description Stop one simulated driver; after `anomaly.idle_minutes` the system raises DRIVER_IDLE.
+         *
+         *     Inputs: {"driver_id": null | uuid}. Errors: NO_SIMULATED_DRIVER
+         */
+        post: operations["start_traffic_jam_api_v1_sim_demo_traffic_jam_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sim/demo/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset Demo
+         * @description Reload the demo data set. Everyone is signed out. System admin only.
+         */
+        post: operations["reset_demo_api_v1_sim_demo_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AdminHubOut */
+        AdminHubOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+            /** Address */
+            address: string;
+            /** Lat */
+            lat: number;
+            /** Lng */
+            lng: number;
+            /**
+             * Area Id
+             * Format: uuid
+             */
+            area_id: string;
+            /** Area Name */
+            area_name: string;
+            status: components["schemas"]["HubStatus"];
+            /** Drivers */
+            drivers: number;
+            /** Managers */
+            managers: number;
+        };
+        /** AreaIn */
+        AreaIn: {
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+            /** Center Lat */
+            center_lat: number;
+            /** Center Lng */
+            center_lng: number;
+            /** Radius Km */
+            radius_km: number;
+        };
+        /** AreaOut */
+        AreaOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+            /** Center Lat */
+            center_lat: number;
+            /** Center Lng */
+            center_lng: number;
+            /** Radius Km */
+            radius_km: number;
+            /** Neighbor Codes */
+            neighbor_codes: string[];
+        };
+        /** AreaRow */
+        AreaRow: {
+            /** Area */
+            area: string;
+            /** Delivered */
+            delivered: number;
+            /** On Time */
+            on_time: number;
+            /** On Time Rate */
+            on_time_rate: number | null;
+        };
         /** AttemptOut */
         AttemptOut: {
             outcome: components["schemas"]["AttemptOutcome"];
@@ -1460,6 +1927,37 @@ export interface components {
          * @enum {string}
          */
         AttemptOutcome: "DELIVERED" | "FAILED";
+        /** AuditOut */
+        AuditOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Actor Name */
+            actor_name: string | null;
+            /** Action */
+            action: string;
+            /** Entity Type */
+            entity_type: string;
+            /** Entity Id */
+            entity_id: string | null;
+            /** Before */
+            before: {
+                [key: string]: unknown;
+            } | null;
+            /** After */
+            after: {
+                [key: string]: unknown;
+            } | null;
+            /** Ip */
+            ip: string | null;
+        };
         /** AvailabilityIn */
         AvailabilityIn: {
             /** Online */
@@ -1563,6 +2061,19 @@ export interface components {
         /** DemoLoginIn */
         DemoLoginIn: {
             role: components["schemas"]["RoleCode"];
+        };
+        /** DemoStatusOut */
+        DemoStatusOut: {
+            /** Gps Enabled */
+            gps_enabled: boolean;
+            /** Speed Factor */
+            speed_factor: number;
+            /** Idle Minutes */
+            idle_minutes: number;
+            /** Daily Reset */
+            daily_reset: boolean;
+            /** Drivers */
+            drivers: components["schemas"]["SimulatedDriverOut"][];
         };
         /**
          * DriverAvailability
@@ -1685,6 +2196,28 @@ export interface components {
             /** Rating */
             rating: string;
         };
+        /** DriverRow */
+        DriverRow: {
+            /** Rank */
+            rank: number;
+            /** Previous Rank */
+            previous_rank: number | null;
+            /**
+             * Driver Id
+             * Format: uuid
+             */
+            driver_id: string;
+            /** Name */
+            name: string;
+            /** Hub */
+            hub: string;
+            /** Delivered */
+            delivered: number;
+            /** Success Rate */
+            success_rate: number | null;
+            /** On Time Rate */
+            on_time_rate: number | null;
+        };
         /** DriverTodayOut */
         DriverTodayOut: {
             /**
@@ -1713,6 +2246,11 @@ export interface components {
             /** Reason */
             reason: string;
         };
+        /**
+         * ExportFormat
+         * @enum {string}
+         */
+        ExportFormat: "xlsx" | "pdf";
         /** FailIn */
         FailIn: {
             reason: components["schemas"]["FailureReason"];
@@ -1766,6 +2304,16 @@ export interface components {
          * @enum {string}
          */
         Gender: "MALE" | "FEMALE" | "OTHER";
+        /** GpsSwitchIn */
+        GpsSwitchIn: {
+            /** Enabled */
+            enabled: boolean;
+        };
+        /**
+         * Granularity
+         * @enum {string}
+         */
+        Granularity: "day" | "week" | "month";
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1820,6 +2368,26 @@ export interface components {
             shift_today: string | null;
             /** Has Pending Offer */
             has_pending_offer: boolean;
+        };
+        /** HubIn */
+        HubIn: {
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+            /** Address */
+            address: string;
+            /** Lat */
+            lat: number;
+            /** Lng */
+            lng: number;
+            /**
+             * Area Id
+             * Format: uuid
+             */
+            area_id: string;
+            /** @default ACTIVE */
+            status?: components["schemas"]["HubStatus"];
         };
         /** HubOrderDetail */
         HubOrderDetail: {
@@ -1940,6 +2508,31 @@ export interface components {
             /** Lng */
             lng: number;
         };
+        /** HubRow */
+        HubRow: {
+            /** Rank */
+            rank: number;
+            /** Previous Rank */
+            previous_rank: number | null;
+            /**
+             * Hub Id
+             * Format: uuid
+             */
+            hub_id: string;
+            /** Name */
+            name: string;
+            /** Orders */
+            orders: number;
+            /** Delivered */
+            delivered: number;
+            /** On Time Rate */
+            on_time_rate: number | null;
+        };
+        /**
+         * HubStatus
+         * @enum {string}
+         */
+        HubStatus: "ACTIVE" | "INACTIVE";
         /**
          * IncidentCategory
          * @enum {string}
@@ -2093,6 +2686,16 @@ export interface components {
          * @enum {string}
          */
         IncidentType: "TRAFFIC_JAM" | "WEATHER" | "TRAFFIC_ACCIDENT" | "VEHICLE_BREAKDOWN" | "HEALTH" | "GOODS_DAMAGED" | "OTHER" | "ETA_ANOMALY" | "DRIVER_IDLE";
+        /**
+         * KpiOut
+         * @description One KPI card: the value for the period and the same measure for the period before.
+         */
+        KpiOut: {
+            /** Value */
+            value: number | null;
+            /** Previous */
+            previous: number | null;
+        };
         /** LoginIn */
         LoginIn: {
             /**
@@ -2219,6 +2822,26 @@ export interface components {
             /** Cod Total */
             cod_total: string;
         };
+        /**
+         * OptimizeOut
+         * @description Suggested visiting order of the pending stops (not saved).
+         */
+        OptimizeOut: {
+            /** Method */
+            method: string;
+            /** Current Stop Ids */
+            current_stop_ids: string[];
+            /** Suggested Stop Ids */
+            suggested_stop_ids: string[];
+            /** Current Duration S */
+            current_duration_s: number | null;
+            /** Suggested Duration S */
+            suggested_duration_s: number | null;
+            /** Suggested Geometry */
+            suggested_geometry: string | null;
+            /** Changed */
+            changed: boolean;
+        };
         /** OrderItemIn */
         OrderItemIn: {
             /** Name */
@@ -2265,6 +2888,17 @@ export interface components {
             resend_available_at: string;
             /** Demo Code */
             demo_code?: string | null;
+        };
+        /** Page[AuditOut] */
+        Page_AuditOut_: {
+            /** Items */
+            items: components["schemas"]["AuditOut"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
         };
         /** Page[HubOrderRow] */
         Page_HubOrderRow_: {
@@ -2432,6 +3066,48 @@ export interface components {
             /** Phone */
             phone: string | null;
         };
+        /** PlanOrderOut */
+        PlanOrderOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Waybill Code */
+            waybill_code: string;
+            status: components["schemas"]["OrderStatus"];
+            priority: components["schemas"]["OrderPriority"];
+            /**
+             * Promised At
+             * Format: date-time
+             */
+            promised_at: string;
+            /** Current Eta */
+            current_eta: string | null;
+        };
+        /** PlanStopOut */
+        PlanStopOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Seq */
+            seq: number;
+            status: components["schemas"]["StopStatus"];
+            /** Address */
+            address: string;
+            /** Lat */
+            lat: number;
+            /** Lng */
+            lng: number;
+            /** Recipient Name */
+            recipient_name: string;
+            /** Eta */
+            eta: string | null;
+            /** Orders */
+            orders: components["schemas"]["PlanOrderOut"][];
+        };
         /** RandomOrdersIn */
         RandomOrdersIn: {
             /** Hub Code */
@@ -2520,12 +3196,64 @@ export interface components {
             /** Reason */
             reason: string;
         };
+        /**
+         * ReportOut
+         * @description Everything E-01 shows, in one call (the page and both exports use it).
+         */
+        ReportOut: {
+            summary: components["schemas"]["SummaryOut"];
+            granularity: components["schemas"]["Granularity"];
+            /** Volume */
+            volume: components["schemas"]["VolumePoint"][];
+            /** Failure Reasons */
+            failure_reasons: components["schemas"]["ShareRow"][];
+            /** Incident Types */
+            incident_types: components["schemas"]["ShareRow"][];
+            /** On Time By Area */
+            on_time_by_area: components["schemas"]["AreaRow"][];
+            /** Top Drivers */
+            top_drivers: components["schemas"]["DriverRow"][];
+            /** Top Hubs */
+            top_hubs: components["schemas"]["HubRow"][];
+        };
+        /** ReportScope */
+        ReportScope: {
+            /**
+             * Date From
+             * Format: date
+             */
+            date_from: string;
+            /**
+             * Date To
+             * Format: date
+             */
+            date_to: string;
+            /** Hub Ids */
+            hub_ids: string[];
+            /** Hub Names */
+            hub_names: string[];
+            /**
+             * Previous From
+             * Format: date
+             */
+            previous_from: string;
+            /**
+             * Previous To
+             * Format: date
+             */
+            previous_to: string;
+        };
         /** ResendOtpIn */
         ResendOtpIn: {
             /** Phone */
             phone: string;
             /** @default REGISTER */
             purpose?: components["schemas"]["OtpPurpose"];
+        };
+        /** ResetOut */
+        ResetOut: {
+            /** Rows */
+            rows: number;
         };
         /** ResetPasswordIn */
         ResetPasswordIn: {
@@ -2602,8 +3330,55 @@ export interface components {
             /** User Count */
             user_count: number;
         };
+        /** RouteDetailOut */
+        RouteDetailOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            status: components["schemas"]["RouteStatus"];
+            /**
+             * Work Date
+             * Format: date
+             */
+            work_date: string;
+            /**
+             * Driver Id
+             * Format: uuid
+             */
+            driver_id: string;
+            /** Driver Name */
+            driver_name: string;
+            /** Driver Phone */
+            driver_phone: string | null;
+            /** Driver Lat */
+            driver_lat: number | null;
+            /** Driver Lng */
+            driver_lng: number | null;
+            /** Hub Name */
+            hub_name: string;
+            /** Hub Lat */
+            hub_lat: number;
+            /** Hub Lng */
+            hub_lng: number;
+            /** Geometry */
+            geometry: string | null;
+            /** Total Distance M */
+            total_distance_m: number | null;
+            /** Total Duration S */
+            total_duration_s: number | null;
+            /** Eta Is Estimate */
+            eta_is_estimate: boolean;
+            /** Stops */
+            stops: components["schemas"]["PlanStopOut"][];
+        };
         /** RouteOut */
         RouteOut: {
+            /** Route Id */
+            route_id: string | null;
+            /** Geometry */
+            geometry: string | null;
             /** Hub Name */
             hub_name: string;
             /** Hub Lat */
@@ -2621,6 +3396,48 @@ export interface components {
             /** Stops */
             stops: components["schemas"]["StopOut"][];
         };
+        /**
+         * RouteStatus
+         * @enum {string}
+         */
+        RouteStatus: "DRAFT" | "PUBLISHED" | "IN_PROGRESS" | "COMPLETED";
+        /** RouteSummaryOut */
+        RouteSummaryOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Driver Id
+             * Format: uuid
+             */
+            driver_id: string;
+            /** Driver Name */
+            driver_name: string;
+            status: components["schemas"]["RouteStatus"];
+            /**
+             * Work Date
+             * Format: date
+             */
+            work_date: string;
+            /** Stops Total */
+            stops_total: number;
+            /** Stops Pending */
+            stops_pending: number;
+            /** Orders Active */
+            orders_active: number;
+            /** Orders At Risk */
+            orders_at_risk: number;
+            /** Total Distance M */
+            total_distance_m: number | null;
+            /** Total Duration S */
+            total_duration_s: number | null;
+            /** Next Eta */
+            next_eta: string | null;
+            /** Last Eta */
+            last_eta: string | null;
+        };
         /** ScanIn */
         ScanIn: {
             /** Waybill Code */
@@ -2629,6 +3446,35 @@ export interface components {
             lat?: number | null;
             /** Lng */
             lng?: number | null;
+        };
+        /** SettingIn */
+        SettingIn: {
+            /** Value */
+            value: unknown;
+        };
+        /** SettingOut */
+        SettingOut: {
+            /** Key */
+            key: string;
+            /** Group */
+            group: string;
+            /** Value */
+            value: unknown;
+            /** Description */
+            description: string | null;
+            /** Updated At */
+            updated_at: string | null;
+        };
+        /** ShareRow */
+        ShareRow: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Count */
+            count: number;
+            /** Share */
+            share: number;
         };
         /**
          * ShiftCode
@@ -2644,6 +3490,40 @@ export interface components {
             work_date: string;
             /** Slots */
             slots: components["schemas"]["ShiftSlotOut"][];
+        };
+        /** ShiftOut */
+        ShiftOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Hub Id
+             * Format: uuid
+             */
+            hub_id: string;
+            /** Hub Name */
+            hub_name: string;
+            code: components["schemas"]["ShiftCode"];
+            /** Name */
+            name: string;
+            /**
+             * Start Time
+             * Format: time
+             */
+            start_time: string;
+            /**
+             * End Time
+             * Format: time
+             */
+            end_time: string;
+            /** Capacity */
+            capacity: number;
+            /** Is Active */
+            is_active: boolean;
+            /** Registered Today */
+            registered_today: number;
         };
         /** ShiftRegistrationIn */
         ShiftRegistrationIn: {
@@ -2690,6 +3570,19 @@ export interface components {
             status: components["schemas"]["SlotStatus"];
             /** Registration Id */
             registration_id: string | null;
+        };
+        /** ShiftUpdateIn */
+        ShiftUpdateIn: {
+            /** Name */
+            name?: string | null;
+            /** Start Time */
+            start_time?: string | null;
+            /** End Time */
+            end_time?: string | null;
+            /** Capacity */
+            capacity?: number | null;
+            /** Is Active */
+            is_active?: boolean | null;
         };
         /** SimOrderOut */
         SimOrderOut: {
@@ -2745,6 +3638,22 @@ export interface components {
              */
             received_at: string;
         };
+        /** SimulatedDriverOut */
+        SimulatedDriverOut: {
+            /**
+             * Driver Id
+             * Format: uuid
+             */
+            driver_id: string;
+            /** Name */
+            name: string;
+            /** Hub */
+            hub: string;
+            /** Orders Left */
+            orders_left: number;
+            /** Stuck Until */
+            stuck_until: string | null;
+        };
         /**
          * SlotStatus
          * @enum {string}
@@ -2754,6 +3663,11 @@ export interface components {
         StartOut: {
             /** Started */
             started: number;
+        };
+        /** StopOrderIn */
+        StopOrderIn: {
+            /** Stop Ids */
+            stop_ids: string[];
         };
         /** StopOut */
         StopOut: {
@@ -2785,6 +3699,20 @@ export interface components {
          * @enum {string}
          */
         StopStatus: "PENDING" | "ARRIVED" | "DONE" | "SKIPPED";
+        /** SummaryOut */
+        SummaryOut: {
+            scope: components["schemas"]["ReportScope"];
+            total_orders: components["schemas"]["KpiOut"];
+            delivered: components["schemas"]["KpiOut"];
+            success_rate: components["schemas"]["KpiOut"];
+            failed_attempt_rate: components["schemas"]["KpiOut"];
+            on_time_rate: components["schemas"]["KpiOut"];
+            avg_delivery_minutes: components["schemas"]["KpiOut"];
+            incidents: components["schemas"]["KpiOut"];
+            active_drivers: components["schemas"]["KpiOut"];
+            /** Total Drivers */
+            total_drivers: number;
+        };
         /** TemporaryPasswordOut */
         TemporaryPasswordOut: {
             /** Temporary Password */
@@ -2877,6 +3805,11 @@ export interface components {
             title: string;
             /** Message */
             message: string | null;
+        };
+        /** TrafficJamIn */
+        TrafficJamIn: {
+            /** Driver Id */
+            driver_id?: string | null;
         };
         /** UpdateRolePermissionsIn */
         UpdateRolePermissionsIn: {
@@ -3001,6 +3934,20 @@ export interface components {
             phone: string;
             /** Code */
             code: string;
+        };
+        /** VolumePoint */
+        VolumePoint: {
+            /**
+             * Period
+             * Format: date
+             */
+            period: string;
+            /** Label */
+            label: string;
+            /** Orders */
+            orders: number;
+            /** Delivered */
+            delivered: number;
         };
     };
     responses: never;
@@ -4557,6 +5504,203 @@ export interface operations {
             };
         };
     };
+    list_routes_api_v1_hub_routes_get: {
+        parameters: {
+            query?: {
+                work_date?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RouteSummaryOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_route_api_v1_hub_routes__route_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                route_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RouteDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    optimize_route_api_v1_hub_routes__route_id__optimize_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                route_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OptimizeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_stop_order_api_v1_hub_routes__route_id__stops_order_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                route_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StopOrderIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RouteDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_report_api_v1_reports_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                hub_ids?: string[] | null;
+                granularity?: components["schemas"]["Granularity"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_report_api_v1_reports_export_get: {
+        parameters: {
+            query?: {
+                format?: components["schemas"]["ExportFormat"];
+                date_from?: string | null;
+                date_to?: string | null;
+                hub_ids?: string[] | null;
+                granularity?: components["schemas"]["Granularity"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     upload_file_api_v1_files_post: {
         parameters: {
             query?: never;
@@ -4866,6 +6010,338 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_areas_api_v1_admin_areas_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AreaOut"][];
+                };
+            };
+        };
+    };
+    create_area_api_v1_admin_areas_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AreaIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AreaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_area_api_v1_admin_areas__area_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                area_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AreaIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AreaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_hubs_api_v1_admin_hubs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminHubOut"][];
+                };
+            };
+        };
+    };
+    create_hub_api_v1_admin_hubs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HubIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminHubOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_hub_api_v1_admin_hubs__hub_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hub_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HubIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminHubOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_shifts_api_v1_admin_shifts_get: {
+        parameters: {
+            query?: {
+                hub_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_shift_api_v1_admin_shifts__shift_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shift_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftUpdateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_settings_api_v1_admin_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingOut"][];
+                };
+            };
+        };
+    };
+    update_setting_api_v1_admin_settings__key__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettingIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_audit_logs_api_v1_admin_audit_logs_get: {
+        parameters: {
+            query?: {
+                action?: string | null;
+                entity_type?: string | null;
+                actor_id?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_AuditOut_"];
+                };
             };
             /** @description Validation Error */
             422: {
@@ -5278,6 +6754,112 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_demo_status_api_v1_sim_demo_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemoStatusOut"];
+                };
+            };
+        };
+    };
+    switch_gps_api_v1_sim_demo_gps_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GpsSwitchIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemoStatusOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_traffic_jam_api_v1_sim_demo_traffic_jam_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrafficJamIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemoStatusOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_demo_api_v1_sim_demo_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResetOut"];
                 };
             };
         };

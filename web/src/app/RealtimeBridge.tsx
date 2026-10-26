@@ -12,7 +12,8 @@ const REFRESH: Record<string, string[][]> = {
   "offer.expired": [["delivery", "offer"], ["hub", "drivers"]],
   "order.updated": [["delivery"], ["driver", "today"], ["hub"]],
   "order.on_hold": [["hub"]],
-  "route.updated": [["delivery"]],
+  "route.updated": [["delivery"], ["hub", "routes"], ["hub", "route"]],
+  "driver.location": [["hub", "drivers"], ["hub", "driver-route"], ["hub", "route"]],
   "incident.created": [["incidents"], ["hub"]],
   "incident.updated": [["incidents"], ["hub"], ["delivery"]],
 };
@@ -25,7 +26,13 @@ export function RealtimeBridge() {
   useEffect(() => {
     if (status !== "authenticated") return;
     realtime.start();
+    let connectedBefore = false;
     const unsubscribe = realtime.subscribe(({ event }) => {
+      // Events sent while the socket was down are lost, so a reconnect refreshes everything.
+      if (event === "ready") {
+        if (connectedBefore) void queryClient.invalidateQueries();
+        connectedBefore = true;
+      }
       for (const queryKey of REFRESH[event] ?? []) {
         void queryClient.invalidateQueries({ queryKey });
       }

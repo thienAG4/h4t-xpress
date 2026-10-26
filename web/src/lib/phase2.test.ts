@@ -53,3 +53,14 @@ describe("labels", () => {
     expect(errorMessage(new ApiError(409, "INCIDENT_OPEN", "x"))).toContain("open incident");
   });
 });
+
+describe("polyline", () => {
+  it("decodes the reference example", async () => {
+    const { decodePolyline } = await import("./polyline");
+    expect(decodePolyline("_p~iF~ps|U_ulLnnqC_mqNvxq`@")).toEqual([
+      [38.5, -120.2],
+      [40.7, -120.95],
+      [43.252, -126.453],
+    ]);
+  });
+});

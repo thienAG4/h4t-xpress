@@ -55,6 +55,24 @@ export type IncidentReportInput = Schemas["IncidentReportIn"];
 export type ResolveInput = Schemas["ResolveIn"];
 export type TrackPage = Schemas["TrackOut"];
 
+// Phase 3: route planning, reports, configuration, demo panel
+export type RouteSummary = Schemas["RouteSummaryOut"];
+export type RouteDetail = Schemas["RouteDetailOut"];
+export type PlanStop = Schemas["PlanStopOut"];
+export type OptimizeResult = Schemas["OptimizeOut"];
+export type Report = Schemas["ReportOut"];
+export type ReportKpi = Schemas["KpiOut"];
+export type Granularity = Schemas["Granularity"];
+export type AdminArea = Schemas["AreaOut"];
+export type AreaInput = Schemas["AreaIn"];
+export type AdminHub = Schemas["AdminHubOut"];
+export type HubInput = Schemas["HubIn"];
+export type AdminShift = Schemas["ShiftOut"];
+export type ShiftUpdateInput = Schemas["ShiftUpdateIn"];
+export type Setting = Schemas["SettingOut"];
+export type AuditEntry = Schemas["AuditOut"];
+export type DemoStatus = Schemas["DemoStatusOut"];
+
 export type Page<T> = {
   items: T[];
   total: number;

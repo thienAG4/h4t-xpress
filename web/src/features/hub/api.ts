@@ -1,4 +1,4 @@
-// Hub API - dashboard, order board, drivers and manual dispatch actions (H-01, H-03, H-07)
+// Hub API - dashboard, order board, drivers, manual dispatch (H-01, H-03, H-07), routes (H-02)
 
 import { request } from "@/lib/http";
 import type {
@@ -8,8 +8,11 @@ import type {
   HubDriverRow,
   HubOrderDetail,
   HubOrderRow,
+  OptimizeResult,
   OrderStatus,
   Page,
+  RouteDetail,
+  RouteSummary,
 } from "@/types";
 
 export type OrderFilters = {
@@ -61,4 +64,25 @@ export function releaseHold(orderId: string): Promise<HubOrderDetail> {
 
 export function confirmReturned(orderId: string): Promise<HubOrderDetail> {
   return request<HubOrderDetail>(`/hub/orders/${orderId}/returned`, { method: "POST" });
+}
+
+// =============================== Route planning (H-02) ===============================
+
+export function listRoutes(workDate?: string): Promise<RouteSummary[]> {
+  return request<RouteSummary[]>("/hub/routes", { query: { work_date: workDate } });
+}
+
+export function fetchRoute(routeId: string): Promise<RouteDetail> {
+  return request<RouteDetail>(`/hub/routes/${routeId}`);
+}
+
+export function optimizeRoute(routeId: string): Promise<OptimizeResult> {
+  return request<OptimizeResult>(`/hub/routes/${routeId}/optimize`, { method: "POST" });
+}
+
+export function saveStopOrder(routeId: string, stopIds: string[]): Promise<RouteDetail> {
+  return request<RouteDetail>(`/hub/routes/${routeId}/stops/order`, {
+    method: "PUT",
+    body: { stop_ids: stopIds },
+  });
 }

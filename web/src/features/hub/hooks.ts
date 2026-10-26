@@ -10,11 +10,15 @@ import {
   fetchDriverRoute,
   fetchOrder,
   fetchOrderCandidates,
+  fetchRoute,
   holdOrder,
   listDrivers,
   listOrders,
+  listRoutes,
+  optimizeRoute,
   reassignOrder,
   releaseHold,
+  saveStopOrder,
   type OrderFilters,
 } from "./api";
 
@@ -96,4 +100,35 @@ export function useReleaseHold() {
 
 export function useConfirmReturned() {
   return useOrderAction(confirmReturned, (order) => `${order.waybill_code} is back on the shelf.`);
+}
+
+// =============================== Route planning (H-02) ===============================
+
+export function useRoutes() {
+  return useQuery({ queryKey: ["hub", "routes"], queryFn: () => listRoutes(), refetchInterval: LIVE });
+}
+
+export function useRouteDetail(routeId: string | null) {
+  return useQuery({
+    queryKey: ["hub", "route", routeId],
+    queryFn: () => fetchRoute(routeId ?? ""),
+    enabled: Boolean(routeId),
+  });
+}
+
+export function useOptimizeRoute() {
+  return useMutation({ mutationFn: optimizeRoute, onError: (error) => toast.error(errorMessage(error)) });
+}
+
+export function useSaveStopOrder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ routeId, stopIds }: { routeId: string; stopIds: string[] }) => saveStopOrder(routeId, stopIds),
+    onSuccess: (route) => {
+      queryClient.setQueryData(["hub", "route", route.id], route);
+      void queryClient.invalidateQueries({ queryKey: ["hub"] });
+      toast.success(`New stop order sent to ${route.driver_name}. ETAs were updated.`);
+    },
+    onError: (error) => toast.error(errorMessage(error)),
+  });
 }

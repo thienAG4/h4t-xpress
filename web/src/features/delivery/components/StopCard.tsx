@@ -22,6 +22,7 @@ export function StopCard({ stop, position }: { stop: RouteStop; position: number
           <p className="shrink-0 text-sm font-semibold">{formatClock(stop.eta)}</p>
         </div>
         <p className="truncate text-sm text-neutral-600">{stop.address}</p>
+        <p className="truncate text-xs text-neutral-500">{stop.orders.map((order) => order.waybill_code).join(", ")}</p>
         <div className="mt-2 flex flex-wrap gap-1.5">
           <Badge tone="primary">
             {stop.orders.length} parcel{stop.orders.length === 1 ? "" : "s"}

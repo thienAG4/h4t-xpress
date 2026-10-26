@@ -7,6 +7,7 @@ import { ScreenTitle } from "@/components/ScreenTitle";
 import { Alert, Badge, Button, Card, Dialog, EmptyState, Loading, SelectField } from "@/components/ui";
 import { errorMessage } from "@/lib/errors";
 import { formatClock, formatMoney } from "@/lib/format";
+import { routeLine, type LatLng } from "@/lib/polyline";
 import type { DriverOrder, DriverRoute } from "@/types";
 import { ScanDialog } from "../components/ScanDialog";
 import { StopCard } from "../components/StopCard";
@@ -30,16 +31,17 @@ function mapData(route: DriverRoute): { points: MapPoint[]; lines: MapLine[] } {
       kind: "stop" as const,
     })),
   ];
-  const start: [number, number] =
+  const start: LatLng =
     route.driver_lat !== null && route.driver_lng !== null
       ? [route.driver_lat, route.driver_lng]
       : [route.hub_lat, route.hub_lng];
   if (route.driver_lat !== null && route.driver_lng !== null) {
     points.push({ id: "me", lat: route.driver_lat, lng: route.driver_lng, label: "You are here", kind: "driver" });
   }
-  // Straight segments in stop order; the OSRM road geometry is a Phase 3 item.
+  // Road geometry from OSRM when available, straight segments in stop order otherwise.
+  const straight: LatLng[] = [start, ...route.stops.map((stop): LatLng => [stop.lat, stop.lng])];
   const lines: MapLine[] = route.stops.length
-    ? [{ id: "route", positions: [start, ...route.stops.map((stop) => [stop.lat, stop.lng] as [number, number])] }]
+    ? [{ id: "route", positions: routeLine(route.geometry, straight) }]
     : [];
   return { points, lines };
 }

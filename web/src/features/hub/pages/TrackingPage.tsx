@@ -8,6 +8,7 @@ import { OrderStatusBadge } from "@/components/StatusBadge";
 import { Alert, Card, EmptyState, Loading, TextField } from "@/components/ui";
 import { errorMessage } from "@/lib/errors";
 import { formatClock, formatDateTime } from "@/lib/format";
+import { routeLine, type LatLng } from "@/lib/polyline";
 import type { DriverRoute, HubDriverRow, HubOrderDetail } from "@/types";
 import { DriversPanel } from "../components/DriversPanel";
 import { OrderPanel } from "../components/OrderPanel";
@@ -25,7 +26,8 @@ function buildMap(
   if (hub) points.push({ id: "hub", ...hub, label: route?.hub_name || "Hub", kind: "hub" });
 
   for (const driver of drivers) {
-    if (driver.lat === null || driver.lng === null || driver.availability !== "ONLINE") continue;
+    const visible = driver.availability === "ONLINE" || driver.active_orders > 0;
+    if (driver.lat === null || driver.lng === null || !visible) continue;
     const highlighted = driver.id === selectedDriver || driver.id === order?.driver_id;
     points.push({
       id: `driver-${driver.id}`,
@@ -46,10 +48,11 @@ function buildMap(
         kind: "stop",
       }),
     );
-    const start: [number, number] =
+    const start: LatLng =
       route.driver_lat !== null && route.driver_lng !== null ? [route.driver_lat, route.driver_lng] : [route.hub_lat, route.hub_lng];
     if (route.stops.length) {
-      lines.push({ id: "route", positions: [start, ...route.stops.map((stop) => [stop.lat, stop.lng] as [number, number])] });
+      const straight: LatLng[] = [start, ...route.stops.map((stop): LatLng => [stop.lat, stop.lng])];
+      lines.push({ id: "route", positions: routeLine(route.geometry, straight) });
     }
   }
   if (order && !route?.stops.some((stop) => stop.orders.some((item) => item.id === order.id))) {
@@ -107,7 +110,7 @@ export function TrackingPage() {
   };
 
   return (
-    <div className="grid gap-4 xl:h-[calc(100vh-8rem)] xl:grid-cols-[300px_1fr_380px]">
+    <div className="grid grid-cols-1 gap-4 xl:h-[calc(100vh-8rem)] xl:grid-cols-[300px_1fr_380px] [&>*]:min-w-0">
       <DriversPanel selectedId={selectedDriver} onSelect={selectDriver} />
 
       <section className="flex min-h-[420px] flex-col rounded-card border border-line bg-white">

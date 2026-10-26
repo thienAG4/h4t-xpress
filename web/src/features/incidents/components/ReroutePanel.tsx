@@ -1,13 +1,13 @@
-// ReroutePanel - H-08: give the driver's remaining stops a new order and send it (UC-03).
-// Stops move with "Up" / "Down" buttons; the map redraws the route in the new order.
+// ReroutePanel - H-08: a new order for the reporting driver's remaining stops (UC-03).
+// The road network can suggest the fastest order; the hub can still adjust it by hand.
 
 import { useState } from "react";
-import { MapView, type MapPoint } from "@/components/MapView";
+import { StopOrderEditor, type EditorStop } from "@/components/StopOrderEditor";
 import { Alert, Button, EmptyState, Loading, TextAreaField } from "@/components/ui";
-import { useDriverRoute } from "@/features/hub/hooks";
+import { useDriverRoute, useOptimizeRoute } from "@/features/hub/hooks";
 import { errorMessage } from "@/lib/errors";
-import { formatClock } from "@/lib/format";
-import type { DriverRoute, RouteStop } from "@/types";
+import type { LatLng } from "@/lib/polyline";
+import type { DriverRoute, OptimizeResult } from "@/types";
 
 type Props = {
   driverId: string;
@@ -35,81 +35,64 @@ export function ReroutePanel({ driverId, submitting, error, onSubmit }: Props) {
   );
 }
 
-function RerouteEditor({
-  route,
-  submitting,
-  error,
-  onSubmit,
-}: { route: DriverRoute } & Omit<Props, "driverId">) {
-  const [stops, setStops] = useState<RouteStop[]>(route.stops);
+function RerouteEditor({ route, submitting, error, onSubmit }: { route: DriverRoute } & Omit<Props, "driverId">) {
+  const optimize = useOptimizeRoute();
+  const [order, setOrder] = useState(() => route.stops.map((stop) => stop.id));
+  const [suggestion, setSuggestion] = useState<OptimizeResult | null>(null);
   const [note, setNote] = useState("");
 
-  const move = (index: number, offset: -1 | 1) =>
-    setStops((current) => {
-      const next = [...current];
-      [next[index], next[index + offset]] = [next[index + offset], next[index]];
-      return next;
-    });
-
-  const start: [number, number] =
+  const stops: EditorStop[] = route.stops.map((stop) => ({
+    id: stop.id,
+    lat: stop.lat,
+    lng: stop.lng,
+    name: stop.recipient_name,
+    address: stop.address,
+    eta: stop.eta,
+  }));
+  const start: LatLng =
     route.driver_lat !== null && route.driver_lng !== null ? [route.driver_lat, route.driver_lng] : [route.hub_lat, route.hub_lng];
-  const points: MapPoint[] = [
-    { id: "driver", lat: start[0], lng: start[1], label: "Driver", kind: "driver" },
-    ...stops.map((stop, index) => ({
-      id: stop.id,
-      lat: stop.lat,
-      lng: stop.lng,
-      label: `${index + 1}. ${stop.recipient_name}`,
-      tag: String(index + 1),
-      kind: "stop" as const,
-    })),
-  ];
-  const before = [start, ...route.stops.map((stop) => [stop.lat, stop.lng] as [number, number])];
-  const after = [start, ...stops.map((stop) => [stop.lat, stop.lng] as [number, number])];
-  const changed = stops.some((stop, index) => stop.id !== route.stops[index].id);
+  const changed = order.some((id, index) => id !== route.stops[index].id);
+  const usesSuggestion = suggestion !== null && suggestion.suggested_stop_ids.join() === order.join();
 
   return (
     <div className="flex flex-col gap-3">
-      <MapView
-        points={points}
-        showLabels
-        lines={[
-          { id: "before", positions: before, color: "#f8183e", dashed: true },
-          { id: "after", positions: after, color: "#1070f8" },
-        ]}
-        className="h-64"
+      {route.route_id && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            variant="secondary"
+            loading={optimize.isPending}
+            onClick={() =>
+              optimize.mutate(route.route_id ?? "", {
+                onSuccess: (result) => {
+                  setSuggestion(result);
+                  setOrder(result.suggested_stop_ids);
+                },
+              })
+            }
+          >
+            Suggest best order
+          </Button>
+          {suggestion && (
+            <span className="text-xs text-neutral-600">
+              {suggestion.changed
+                ? `Saves about ${Math.max(1, Math.round(((suggestion.current_duration_s ?? 0) - (suggestion.suggested_duration_s ?? 0)) / 60))} min of driving.`
+                : "The current order is already the fastest."}
+            </span>
+          )}
+        </div>
+      )}
+      <StopOrderEditor
+        start={start}
+        stops={stops}
+        order={order}
+        onChange={setOrder}
+        currentGeometry={route.geometry}
+        draftGeometry={usesSuggestion ? suggestion?.suggested_geometry : null}
       />
-      <p className="text-xs text-neutral-600">Dashed red: current order. Blue: new order.</p>
-      <ol className="flex flex-col gap-2">
-        {stops.map((stop, index) => (
-          <li key={stop.id} className="flex items-center gap-3 rounded-input border border-line bg-white px-3 py-2 text-sm">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white">
-              {index + 1}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate font-semibold">{stop.recipient_name}</span>
-              <span className="block truncate text-xs text-neutral-600">
-                {stop.address} - ETA {formatClock(stop.eta)}
-              </span>
-            </span>
-            <span className="flex gap-1">
-              <Button size="sm" variant="secondary" disabled={index === 0} onClick={() => move(index, -1)}>
-                Up
-              </Button>
-              <Button size="sm" variant="secondary" disabled={index === stops.length - 1} onClick={() => move(index, 1)}>
-                Down
-              </Button>
-            </span>
-          </li>
-        ))}
-      </ol>
       <TextAreaField label="Note for the driver (optional)" rows={2} value={note} onChange={(event) => setNote(event.target.value)} />
       {Boolean(error) && <Alert tone="danger">{errorMessage(error)}</Alert>}
-      <Button
-        disabled={!changed}
-        loading={submitting}
-        onClick={() => onSubmit(stops.map((stop) => stop.id), note.trim() || null)}
-      >
+      <Button disabled={!changed} loading={submitting} onClick={() => onSubmit(order, note.trim() || null)}>
         {changed ? "Send the new route to the driver" : "Move a stop to change the route"}
       </Button>
     </div>

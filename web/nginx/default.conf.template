@@ -40,6 +40,17 @@ server {
         add_header Cache-Control "no-cache";
     }
 
+    # A new service worker must be picked up on the next visit.
+    location = /sw.js {
+        add_header Cache-Control "no-cache";
+    }
+
+    # nginx has no MIME type for .webmanifest; browsers want this one to install the app.
+    location = /manifest.webmanifest {
+        default_type application/manifest+json;
+        add_header Cache-Control "no-cache";
+    }
+
     # Client-side routing: unknown paths fall back to the SPA.
     location / {
         try_files $uri $uri/ /index.html;

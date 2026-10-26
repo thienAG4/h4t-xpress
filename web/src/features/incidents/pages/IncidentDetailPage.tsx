@@ -115,7 +115,7 @@ function ResolutionCard({ incident, onResolved }: { incident: Incident; onResolv
     (incident.category ?? incident.suggested_category) === "SUBJECTIVE" ? "DRIVER_REASSIGNMENT" : "ROUTE_SUGGESTED",
   );
   const [holdNote, setHoldNote] = useState("");
-  // mutateAsync, not mutate callbacks: this card remounts when the status changes.
+  // mutateAsync: the result dialog lives in the page and must open even after a refetch.
   const apply = (data: ResolveInput, message: string) =>
     void resolve.mutateAsync(data).then(() => onResolved(message), () => undefined);
   const editable = incident.status === "OPEN" || incident.status === "IN_REVIEW";
@@ -313,13 +313,13 @@ export function IncidentDetailPage() {
           </Link>
         }
       />
-      <div className="grid gap-6 xl:grid-cols-[1fr_1.1fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_1.1fr] [&>*]:min-w-0">
         <div className="flex flex-col gap-6">
           <ReportCard incident={data} />
           <AffectedOrders incident={data} />
         </div>
-        {/* Keyed by status so the form resets after each server-side change. */}
-        <ResolutionCard key={`${data.id}-${data.status}`} incident={data} onResolved={setResult} />
+        {/* Keyed by incident only: a status change must not wipe what the manager is typing. */}
+        <ResolutionCard key={data.id} incident={data} onResolved={setResult} />
       </div>
       <Dialog
         open={Boolean(result)}
