@@ -916,6 +916,9 @@ export interface paths {
         /**
          * List Incidents
          * @description Incident list (H-05), open and high priority first.
+         *
+         *     Inputs: status, priority, open_only, q (incident code, driver name or waybill),
+         *             days (reported in the last N days), page, page_size
          */
         get: operations["list_incidents_api_v1_hub_incidents_get"];
         put?: never;
@@ -3935,7 +3938,10 @@ export interface components {
             /** Code */
             code: string;
         };
-        /** VolumePoint */
+        /**
+         * VolumePoint
+         * @description Orders created in one period and what became of them (same rules as the KPIs).
+         */
         VolumePoint: {
             /**
              * Period
@@ -3948,6 +3954,10 @@ export interface components {
             orders: number;
             /** Delivered */
             delivered: number;
+            /** On Time */
+            on_time: number;
+            /** Returned */
+            returned: number;
         };
     };
     responses: never;
@@ -5308,6 +5318,8 @@ export interface operations {
                 status?: components["schemas"]["IncidentStatus"] | null;
                 priority?: components["schemas"]["IncidentPriority"] | null;
                 open_only?: boolean;
+                q?: string | null;
+                days?: number | null;
                 page?: number;
                 page_size?: number;
             };

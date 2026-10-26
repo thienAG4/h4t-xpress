@@ -32,6 +32,10 @@ export type IncidentFilters = {
   status?: IncidentStatus;
   priority?: IncidentPriority;
   open_only?: boolean;
+  /** Incident code, driver name or waybill. */
+  q?: string;
+  /** Reported in the last N days. */
+  days?: number;
 };
 
 export function fetchSummary(): Promise<IncidentSummary> {

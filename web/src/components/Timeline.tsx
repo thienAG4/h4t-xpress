@@ -1,5 +1,6 @@
 // Timeline - order history for the hub (H-03) and the four delivery steps for drivers (D-07)
 
+import { Calendar, Package } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { FAILURE_REASON, INCIDENT_TYPE, ORDER_STATUS } from "@/lib/labels";
@@ -22,24 +23,42 @@ function describe(event: TimelineEvent): { title: string; detail?: string } {
   return { title, detail };
 }
 
-/** Full event list, newest last, as stored in order_events. */
+/**
+ * Full event list, newest last, as stored in order_events. Drawn like the Figma "Status" card:
+ * markers on a dashed line, the date at the right, the first and the latest event boxed.
+ */
 export function Timeline({ events }: { events: TimelineEvent[] }) {
   return (
-    <ol className="relative flex flex-col gap-4 border-l border-line pl-5">
+    <ol className="flex flex-col">
       {events.map((event, index) => {
         const { title, detail } = describe(event);
+        const first = index === 0;
         const last = index === events.length - 1;
+        const boxed = first || last;
         return (
-          <li key={`${event.at}-${index}`} className="relative">
-            <span
-              className={cn(
-                "absolute top-1.5 -left-[25px] size-2.5 rounded-full border-2",
-                last ? "border-primary-600 bg-primary-600" : "border-primary-200 bg-white",
+          <li key={`${event.at}-${index}`} className="flex gap-3">
+            <div className="flex w-5 shrink-0 flex-col items-center">
+              {boxed ? (
+                <Package
+                  className={cn("mt-3 size-[18px] shrink-0", last ? "text-primary-600" : "text-neutral-500")}
+                  strokeWidth={1.75}
+                  aria-hidden
+                />
+              ) : (
+                <span className="mt-1.5 size-2.5 shrink-0 rounded-full border-2 border-primary-600 bg-white" aria-hidden />
               )}
-            />
-            <p className={cn("text-sm", last ? "font-semibold text-ink" : "text-neutral-700")}>{title}</p>
-            <p className="text-xs text-warning-700">{formatDateTime(event.at)}</p>
-            {detail && <p className="mt-0.5 text-xs text-neutral-600">{detail}</p>}
+              {!last && <span className="mt-1 w-px flex-1 border-l border-dashed border-primary-300" aria-hidden />}
+            </div>
+            <div className={cn("mb-3 min-w-0 flex-1", boxed && "rounded-md border border-line px-3 py-2.5")}>
+              <div className="flex items-start justify-between gap-3">
+                <p className={cn("text-sm", last ? "font-semibold text-ink" : "text-ink")}>{title}</p>
+                <p className="flex shrink-0 items-center gap-1 text-xs text-neutral-600 tabular-nums">
+                  <Calendar className="size-3.5" aria-hidden />
+                  {formatDateTime(event.at)}
+                </p>
+              </div>
+              {detail && <p className="mt-1 text-sm text-neutral-600">{detail}</p>}
+            </div>
           </li>
         );
       })}

@@ -81,6 +81,9 @@ test("hub manager", async ({ browser }) => {
   await demoLogin(page, "Hub Manager");
   await shoot(page, "hub-dashboard");
   await page.goto("/hub/tracking");
+  // Follow the first order in "Find an order", as in the Figma tracking frame.
+  await page.getByRole("button", { name: /SN\d+/ }).first().click();
+  await expect(page.getByText("Shipment ID")).toBeVisible();
   await shoot(page, "hub-tracking");
   await page.goto("/hub/routes");
   await expect(page.getByText(/stops left/).first()).toBeVisible();

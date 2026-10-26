@@ -36,12 +36,22 @@ export function Alert({
   );
 }
 
+// Figma status pills: thin coloured outline, light fill, small radius.
+const BADGE_TONES: Record<Tone, string> = {
+  info: "border-primary-500/60 bg-primary-50 text-primary-700",
+  primary: "border-primary-500/60 bg-primary-50 text-primary-700",
+  success: "border-success-500/60 bg-success-50 text-success-700",
+  warning: "border-warning-500/60 bg-warning-50 text-warning-700",
+  danger: "border-danger-500/50 bg-danger-50 text-danger-700",
+  neutral: "border-neutral-300 bg-neutral-50 text-neutral-700",
+};
+
 export function Badge({ tone = "neutral", children }: { tone?: Tone; children: ReactNode }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium whitespace-nowrap",
-        TONES[tone],
+        "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium whitespace-nowrap",
+        BADGE_TONES[tone],
       )}
     >
       {children}

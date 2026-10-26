@@ -1,23 +1,23 @@
-// Report charts - hand-drawn SVG columns and horizontal bars (no chart library).
-// Marks follow the dataviz rules: bars <= 24px with a 4px rounded data-end, 2px gaps,
-// hairline grid, a legend for 2+ series, a tooltip per column group, and a table view.
+// Report charts - hand-drawn SVG columns, area line, sparkline and horizontal bars (no chart library).
+// Marks follow the dataviz rules: bars <= 24px with a 4px rounded data-end, 2px gaps, 2px lines,
+// hairline grid, a legend for 2+ series, a tooltip per column group or a crosshair, and a table view.
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 // Validated pair (scripts/validate_palette.js, light surface): brand blue + orange.
 const SERIES_COLORS = ["#1070f8", "#eb6834"];
 
-function useWidth<T extends HTMLElement>() {
+function useWidth<T extends HTMLElement>(min = 280) {
   const ref = useRef<T>(null);
-  const [width, setWidth] = useState(640);
+  const [width, setWidth] = useState(min);
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
-    const observer = new ResizeObserver(([entry]) => setWidth(Math.max(280, entry.contentRect.width)));
+    const observer = new ResizeObserver(([entry]) => setWidth(Math.max(min, entry.contentRect.width)));
     observer.observe(element);
     return () => observer.disconnect();
-  }, []);
+  }, [min]);
   return { ref, width };
 }
 
@@ -44,10 +44,13 @@ export function ColumnChart({
   points,
   series,
   height = 240,
+  track = false,
 }: {
   points: ColumnPoint[];
   series: string[];
   height?: number;
+  /** Pale full-height track behind each bar (Figma "Order Volume"). */
+  track?: boolean;
 }) {
   const { ref, width } = useWidth<HTMLDivElement>();
   const [active, setActive] = useState<number | null>(null);
@@ -79,6 +82,10 @@ export function ColumnChart({
           const x0 = left + index * band + (band - groupWidth) / 2;
           return (
             <g key={point.label}>
+              {track &&
+                point.values.map((_, s) => (
+                  <path key={`track-${series[s]}`} d={columnPath(x0 + s * (barWidth + 2), 8, barWidth, plotHeight)} fill="#eef4ff" />
+                ))}
               {point.values.map((value, s) => {
                 const top = y(value);
                 const barHeight = 8 + plotHeight - top;
@@ -172,5 +179,113 @@ export function BarList({ rows, max, empty }: { rows: BarRow[]; max?: number; em
         </li>
       ))}
     </ul>
+  );
+}
+
+export type LinePoint = { label: string; value: number };
+
+/** Single-series area chart with a crosshair tooltip (Figma hub "Recent Orders"). */
+export function AreaChart({ points, label, height = 190 }: { points: LinePoint[]; label: string; height?: number }) {
+  const { ref, width } = useWidth<HTMLDivElement>(160);
+  const gradient = useId();
+  const [active, setActive] = useState<number | null>(null);
+  const left = 30;
+  const top = 10;
+  const bottom = 22;
+  const plotWidth = width - left - 10;
+  const plotHeight = height - top - bottom;
+  const max = niceMax(Math.max(1, ...points.map((point) => point.value)));
+  const step = points.length > 1 ? plotWidth / (points.length - 1) : 0;
+  const x = (index: number) => left + (points.length > 1 ? index * step : plotWidth / 2);
+  const y = (value: number) => top + plotHeight - (value / max) * plotHeight;
+  const line = points.map((point, index) => `${index ? "L" : "M"}${x(index)},${y(point.value)}`).join(" ");
+  const area = points.length ? `${line} L${x(points.length - 1)},${top + plotHeight} L${x(0)},${top + plotHeight} Z` : "";
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map((share) => Math.round(max * share));
+  const labelEvery = Math.max(1, Math.ceil(points.length / Math.max(1, Math.floor(plotWidth / 44))));
+
+  const pick = (clientX: number, box: DOMRect) => {
+    if (!points.length) return;
+    const index = Math.round((clientX - box.left - left) / Math.max(step, 1));
+    setActive(Math.min(points.length - 1, Math.max(0, index)));
+  };
+
+  return (
+    <div ref={ref} className="relative">
+      <svg
+        width={width}
+        height={height}
+        role="img"
+        aria-label={`${label}: ${points.map((point) => `${point.label} ${point.value}`).join(", ")}`}
+        className="block"
+        onPointerMove={(event) => pick(event.clientX, event.currentTarget.getBoundingClientRect())}
+        onPointerLeave={() => setActive(null)}
+      >
+        <defs>
+          <linearGradient id={gradient} x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#1070f8" stopOpacity={0.28} />
+            <stop offset="100%" stopColor="#1070f8" stopOpacity={0.03} />
+          </linearGradient>
+        </defs>
+        {ticks.map((tick) => (
+          <g key={tick}>
+            <line x1={left} x2={width - 10} y1={y(tick)} y2={y(tick)} stroke="#e6e7ee" strokeWidth={1} />
+            <text x={left - 6} y={y(tick) + 3} textAnchor="end" className="fill-neutral-500 text-[10px] tabular-nums">
+              {compact(tick)}
+            </text>
+          </g>
+        ))}
+        <path d={area} fill={`url(#${gradient})`} />
+        <path d={line} fill="none" stroke="#1070f8" strokeWidth={2} strokeLinejoin="round" />
+        {points.map((point, index) =>
+          index % labelEvery === 0 ? (
+            <text key={point.label} x={x(index)} y={height - 5} textAnchor="middle" className="fill-neutral-500 text-[10px]">
+              {point.label}
+            </text>
+          ) : null,
+        )}
+        {active !== null && points[active] && (
+          <g>
+            <line x1={x(active)} x2={x(active)} y1={top} y2={top + plotHeight} stroke="#98a1b3" strokeDasharray="3 3" />
+            <circle cx={x(active)} cy={y(points[active].value)} r={4.5} fill="#1070f8" stroke="#fff" strokeWidth={2} />
+          </g>
+        )}
+      </svg>
+      {active !== null && points[active] && (
+        <div
+          className="pointer-events-none absolute top-0 z-10 rounded-md border border-line bg-white px-2.5 py-1.5 text-xs shadow-md"
+          style={{ left: Math.min(width - 120, Math.max(0, x(active) - 50)) }}
+        >
+          <p className="text-neutral-600">{points[active].label}</p>
+          <p className="font-semibold tabular-nums">
+            {points[active].value} {label.toLowerCase()}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Tiny trend line under a KPI value; decorative because the value is printed beside it. */
+export function Sparkline({ values, className }: { values: number[]; className?: string }) {
+  const gradient = useId();
+  if (values.length < 2) return null;
+  const width = 120;
+  const height = 32;
+  const min = Math.min(...values);
+  const span = Math.max(...values) - min || 1;
+  const x = (index: number) => (index / (values.length - 1)) * width;
+  const y = (value: number) => height - 3 - ((value - min) / span) * (height - 6);
+  const line = values.map((value, index) => `${index ? "L" : "M"}${x(index)},${y(value)}`).join(" ");
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className={cn("h-8 w-full", className)} aria-hidden>
+      <defs>
+        <linearGradient id={gradient} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#1070f8" stopOpacity={0.22} />
+          <stop offset="100%" stopColor="#1070f8" stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      <path d={`${line} L${width},${height} L0,${height} Z`} fill={`url(#${gradient})`} />
+      <path d={line} fill="none" stroke="#1070f8" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+    </svg>
   );
 }

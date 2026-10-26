@@ -8,8 +8,9 @@ test("executive reads the report and changes the period", async ({ page }) => {
   await expect(page).toHaveURL(/\/reports$/);
   await expect(page.getByText("Total orders")).toBeVisible();
   await expect(page.getByRole("img", { name: /Orders created and Delivered/ })).toBeVisible();
+  await page.getByRole("button", { name: /^Timeframe/ }).click();
   await page.getByRole("button", { name: "Last 7 days" }).click();
-  await expect(page.getByRole("button", { name: "Last 7 days" })).toHaveClass(/font-semibold/);
+  await expect(page.getByRole("button", { name: "Timeframe: Last 7 days" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Download Excel" })).toBeVisible();
 });
 

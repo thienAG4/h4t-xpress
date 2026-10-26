@@ -1,10 +1,10 @@
-// MapView - OpenStreetMap base map with circle markers and straight route lines.
-// Markers are drawn shapes, never images, so the map follows the no-icon rule.
+// MapView - OpenStreetMap base map with circle markers and route lines.
+// Markers are drawn circles (no marker images to load); stops carry their number as a label.
 
 import "leaflet/dist/leaflet.css";
 import type { LatLngTuple } from "leaflet";
 import { useEffect } from "react";
-import { CircleMarker, MapContainer, Polyline, TileLayer, Tooltip, useMap } from "react-leaflet";
+import { CircleMarker, MapContainer, Polyline, TileLayer, Tooltip, useMap, ZoomControl } from "react-leaflet";
 import { cn } from "@/lib/cn";
 
 export type PointKind = "hub" | "driver" | "stop" | "incident" | "candidate" | "selected";
@@ -47,17 +47,43 @@ const HCM_CENTER: LatLngTuple = [10.85, 106.75];
 const TILES = "https://tile.openstreetmap.de/{z}/{x}/{y}.png";
 const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
-/** Fit the view when the set of points changes, not on every render (keeps the user's pan). */
-function FitToPoints({ signature }: { signature: string }) {
+/** Space kept free around the points, in pixels, for panels floating over the map. */
+export type FitPadding = { topLeft: [number, number]; bottomRight: [number, number] };
+
+/**
+ * Fit the view when the set of points changes, not on every render (keeps the user's pan).
+ * The container can get its final size after mount (absolute layouts, grids), so a resize
+ * measures the map again and refits.
+ */
+function FitToPoints({ signature, padding }: { signature: string; padding?: string }) {
   const map = useMap();
   useEffect(() => {
     const points = signature
       .split(";")
       .filter(Boolean)
       .map((pair) => pair.split(",").map(Number) as LatLngTuple);
-    if (points.length === 1) map.setView(points[0], 14);
-    if (points.length > 1) map.fitBounds(points, { padding: [36, 36], maxZoom: 15 });
-  }, [map, signature]);
+    const room = padding ? (JSON.parse(padding) as FitPadding) : null;
+    const fit = () => {
+      // Floating panels only cover the map on wide screens; narrow layouts stack them.
+      const wide = room && map.getSize().x > 760;
+      if (points.length === 1) map.setView(points[0], 14);
+      if (points.length > 1) {
+        map.fitBounds(
+          points,
+          wide
+            ? { paddingTopLeft: room.topLeft, paddingBottomRight: room.bottomRight, maxZoom: 15 }
+            : { padding: [36, 36], maxZoom: 15 },
+        );
+      }
+    };
+    fit();
+    const observer = new ResizeObserver(() => {
+      map.invalidateSize();
+      fit();
+    });
+    observer.observe(map.getContainer());
+    return () => observer.disconnect();
+  }, [map, signature, padding]);
   return null;
 }
 
@@ -66,15 +92,19 @@ type Props = {
   lines?: MapLine[];
   className?: string;
   showLabels?: boolean;
+  fitPadding?: FitPadding;
+  /** Move the +/- buttons away from panels floating over the map. */
+  zoomPosition?: "topleft" | "topright";
 };
 
-export function MapView({ points, lines = [], className, showLabels = false }: Props) {
+export function MapView({ points, lines = [], className, showLabels = false, fitPadding, zoomPosition = "topleft" }: Props) {
   const signature = points.map((point) => `${point.lat.toFixed(5)},${point.lng.toFixed(5)}`).join(";");
   return (
     // `isolate` keeps Leaflet's high z-index panes under sticky headers and dialogs.
     <div className={cn("map-view isolate overflow-hidden rounded-card border border-line", className)}>
       {/* No wheel zoom: the page keeps scrolling over the map; +/- and pinch still zoom. */}
-      <MapContainer center={HCM_CENTER} zoom={12} scrollWheelZoom={false} className="h-full w-full">
+      <MapContainer center={HCM_CENTER} zoom={12} scrollWheelZoom={false} zoomControl={false} className="h-full w-full">
+        <ZoomControl position={zoomPosition} />
         <TileLayer attribution={ATTRIBUTION} url={TILES} maxZoom={18} />
         {lines.map((line) => (
           <Polyline
@@ -99,7 +129,7 @@ export function MapView({ points, lines = [], className, showLabels = false }: P
             </CircleMarker>
           );
         })}
-        <FitToPoints signature={signature} />
+        <FitToPoints signature={signature} padding={fitPadding && JSON.stringify(fitPadding)} />
       </MapContainer>
     </div>
   );

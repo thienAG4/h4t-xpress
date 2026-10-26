@@ -2,6 +2,20 @@
 // Screens behind sign-in are loaded on demand, so the map library and the hub, report and
 // admin screens are not part of the first download.
 
+import {
+  CalendarClock,
+  ChartArea,
+  ChartPie,
+  Crosshair,
+  LayoutGrid,
+  ScrollText,
+  Send,
+  Settings,
+  ShieldCheck,
+  SlidersHorizontal,
+  Users,
+  Warehouse,
+} from "lucide-react";
 import { lazy, Suspense, type ComponentType, type ReactNode } from "react";
 import { createBrowserRouter } from "react-router";
 import { Loading } from "@/components/ui";
@@ -14,8 +28,10 @@ import { HomePage } from "@/features/home/HomePage";
 import { NotFoundPage } from "@/features/home/NotFoundPage";
 import { RedirectIfSignedIn, RequireAuth } from "./guards";
 import { AuthLayout } from "./layouts/AuthLayout";
-import { DashboardLayout, type NavItem } from "./layouts/DashboardLayout";
+import { BackOfficeLayout } from "./layouts/BackOfficeLayout";
 import { DriverLayout } from "./layouts/DriverLayout";
+import { HubLayout } from "./layouts/HubLayout";
+import type { NavItem } from "./layouts/nav";
 
 /** A page module loaded when its route is first opened. */
 function page<T extends Record<string, unknown>>(load: () => Promise<T>, name: keyof T & string) {
@@ -27,28 +43,33 @@ function page<T extends Record<string, unknown>>(load: () => Promise<T>, name: k
   );
 }
 
+// Icons follow the Figma hub rail: grid, pie, send, target, chart.
 const hubNav: NavItem[] = [
-  { to: "/hub", label: "Dashboard", end: true },
-  { to: "/hub/incidents", label: "Incidents", permission: "incident.manage" },
-  { to: "/hub/tracking", label: "Delivery tracking", permission: "driver.view_hub" },
-  { to: "/hub/routes", label: "Route planning", permission: "route.plan" },
-  { to: "/reports", label: "Reports", permission: "report.view" },
+  { to: "/hub", label: "Dashboard", icon: LayoutGrid, end: true },
+  { to: "/hub/incidents", label: "Incidents", icon: ChartPie, permission: "incident.manage" },
+  { to: "/hub/tracking", label: "Delivery tracking", icon: Send, permission: "driver.view_hub" },
+  { to: "/hub/routes", label: "Route planning", icon: Crosshair, permission: "route.plan" },
+  { to: "/reports", label: "Reports", icon: ChartArea, permission: "report.view" },
 ];
 
-const reportsNav: NavItem[] = [
-  { to: "/reports", label: "Overview", end: true },
-  // Hub managers also read reports; this takes them back to their hub screens.
-  { to: "/hub", label: "Back to hub", permission: "hub.dashboard.view" },
+const reportsNav: NavItem[] = [{ to: "/reports", label: "Dashboard", icon: ChartArea, end: true }];
+
+// Hub managers also read reports; this takes them back to their hub screens.
+const reportsSupport: NavItem[] = [
+  { to: "/hub", label: "Hub screens", icon: LayoutGrid, permission: "hub.dashboard.view" },
+  { to: "/admin/settings", label: "Settings", icon: Settings, permission: "settings.manage" },
 ];
 
 const adminNav: NavItem[] = [
-  { to: "/admin", label: "Users", end: true, permission: "user.manage" },
-  { to: "/admin/roles", label: "Roles & permissions", permission: "role.manage" },
-  { to: "/admin/hubs", label: "Hubs & areas", permission: "hub.manage" },
-  { to: "/admin/shifts", label: "Shifts", permission: "hub.manage" },
-  { to: "/admin/settings", label: "Settings", permission: "settings.manage" },
-  { to: "/admin/audit", label: "Audit log", permission: "audit.view" },
+  { to: "/admin", label: "Users", icon: Users, end: true, permission: "user.manage" },
+  { to: "/admin/roles", label: "Roles & permissions", icon: ShieldCheck, permission: "role.manage" },
+  { to: "/admin/hubs", label: "Hubs & areas", icon: Warehouse, permission: "hub.manage" },
+  { to: "/admin/shifts", label: "Shifts", icon: CalendarClock, permission: "hub.manage" },
+  { to: "/admin/settings", label: "Settings", icon: SlidersHorizontal, permission: "settings.manage" },
+  { to: "/admin/audit", label: "Audit log", icon: ScrollText, permission: "audit.view" },
 ];
+
+const adminSupport: NavItem[] = [{ to: "/reports", label: "Reports", icon: ChartArea, permission: "report.view" }];
 
 const guarded = (permission: string, element: ReactNode) => (
   <RequireAuth permission={permission}>{element}</RequireAuth>
@@ -95,7 +116,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/hub",
-    element: guarded("hub.dashboard.view", <DashboardLayout title="Hub" nav={hubNav} />),
+    element: guarded("hub.dashboard.view", <HubLayout nav={hubNav} />),
     children: [
       { index: true, element: page(() => import("@/features/hub/pages/HubDashboardPage"), "HubDashboardPage") },
       {
@@ -132,12 +153,12 @@ export const router = createBrowserRouter([
   },
   {
     path: "/reports",
-    element: guarded("report.view", <DashboardLayout title="Reports" nav={reportsNav} />),
+    element: guarded("report.view", <BackOfficeLayout title="Reports" nav={reportsNav} support={reportsSupport} />),
     children: [{ index: true, element: page(() => import("@/features/reports/pages/ReportsPage"), "ReportsPage") }],
   },
   {
     path: "/admin",
-    element: guarded("user.manage", <DashboardLayout title="System admin" nav={adminNav} />),
+    element: guarded("user.manage", <BackOfficeLayout title="System admin" nav={adminNav} support={adminSupport} />),
     children: [
       { index: true, element: page(() => import("@/features/admin/pages/UsersPage"), "UsersPage") },
       { path: "users/new", element: page(() => import("@/features/admin/pages/UserFormPage"), "UserFormPage") },

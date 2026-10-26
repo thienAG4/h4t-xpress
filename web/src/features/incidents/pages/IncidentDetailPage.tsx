@@ -1,13 +1,15 @@
-// IncidentDetailPage - H-06 (Figma "Issue Report") with the resolution flows H-07 and H-08:
-// read the report, classify (BR13), answer the driver (BR14), then apply a solution (BR15).
+// IncidentDetailPage - H-06 laid out like the Figma "Issue Report", with the resolution flows
+// H-07 and H-08: read the report, classify (BR13), answer the driver (BR14), then apply a
+// solution (BR15) in the "Resolution action" box under the report.
 
+import { CircleCheck, Route, UserRoundCheck, Warehouse } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router";
 import { CandidatePicker } from "@/components/CandidatePicker";
 import { MapLegend, MapView, type MapPoint } from "@/components/MapView";
 import { PageHeader } from "@/components/PageHeader";
 import { IncidentStatusBadge, OrderStatusBadge, PriorityBadge } from "@/components/StatusBadge";
-import { Alert, Badge, Button, Card, Dialog, Loading, SelectField, TextAreaField } from "@/components/ui";
+import { Alert, Badge, Button, Dialog, IconTile, Loading, SelectField, TextAreaField, TextField } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { errorMessage } from "@/lib/errors";
 import { formatClock, formatDateTime, formatPhone } from "@/lib/format";
@@ -16,51 +18,71 @@ import type { Incident, IncidentCategory, IncidentPriority, ResolutionSolution, 
 import { ReroutePanel } from "../components/ReroutePanel";
 import { useCandidates, useClassify, useIncident, useResolve, useRespond } from "../hooks";
 
-function ReportCard({ incident }: { incident: Incident }) {
+const STATUS_DOT: Record<Incident["status"], string> = {
+  OPEN: "bg-primary-500",
+  IN_REVIEW: "bg-[#f8c47a]",
+  RESOLVING: "bg-warning-500",
+  RESOLVED: "bg-success-500",
+  CLOSED_NO_ACTION: "bg-neutral-400",
+};
+
+const SOLUTION_ICON: Record<ResolutionSolution, typeof Route> = {
+  ROUTE_SUGGESTED: Route,
+  DRIVER_REASSIGNMENT: UserRoundCheck,
+  HOLD_AT_HUB: Warehouse,
+};
+
+function ReportSection({ incident }: { incident: Incident }) {
   const located = incident.lat !== null && incident.lng !== null;
   const mapPoints: MapPoint[] = located
     ? [{ id: "incident", lat: incident.lat as number, lng: incident.lng as number, label: "Reported here", kind: "incident" }]
     : [];
 
   return (
-    <Card>
+    <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="font-display text-lg font-bold">{incident.code}</span>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className={cn("size-4 rounded-full", STATUS_DOT[incident.status])} aria-hidden />
+          <span className="text-lg font-medium text-ink">{incident.code}</span>
           <IncidentStatusBadge status={incident.status} />
           <PriorityBadge priority={incident.priority} />
         </div>
-        <span className="text-xs text-neutral-500">Posted at {formatDateTime(incident.reported_at)}</span>
+        <span className="text-sm text-neutral-500">Posted at {formatDateTime(incident.reported_at)}</span>
       </div>
-      <h2 className="mt-4 text-lg font-semibold">{INCIDENT_TYPE[incident.type]}</h2>
-      <p className="mt-2 text-sm whitespace-pre-line text-neutral-700">{incident.description}</p>
-      {incident.photo_urls.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {incident.photo_urls.map((url) => (
-            <a key={url} href={url} target="_blank" rel="noreferrer">
-              <img src={url} alt="Evidence from the driver" className="size-28 rounded-input border border-line object-cover" />
-            </a>
-          ))}
+      <div className="mt-5 grid gap-6 md:grid-cols-[minmax(0,1fr)_320px]">
+        <div>
+          <h2 className="font-sans text-xl font-medium text-ink">{INCIDENT_TYPE[incident.type]}</h2>
+          <p className="mt-3 text-[15px] whitespace-pre-line text-neutral-600">{incident.description}</p>
+          {incident.photo_urls.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {incident.photo_urls.map((url) => (
+                <a key={url} href={url} target="_blank" rel="noreferrer">
+                  <img src={url} alt="Evidence from the driver" className="size-28 rounded-md border border-line object-cover" />
+                </a>
+              ))}
+            </div>
+          )}
         </div>
-      )}
-      {located && (
-        <div className="mt-4 flex flex-col gap-2">
-          <MapView points={mapPoints} className="h-52" />
-          <MapLegend kinds={["incident"]} />
-        </div>
-      )}
-    </Card>
+        {located && (
+          <div className="flex flex-col gap-2">
+            <MapView points={mapPoints} className="h-44 rounded-lg" />
+            <MapLegend kinds={["incident"]} />
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
 function AffectedOrders({ incident }: { incident: Incident }) {
   return (
-    <Card title={`Parcels affected (${incident.orders.length})`}>
-      <ul className="flex flex-col divide-y divide-line">
+    <section>
+      <h3 className="font-sans text-base font-medium text-ink">Parcels affected ({incident.orders.length})</h3>
+      <ul className="mt-2 flex flex-col divide-y divide-line">
         {incident.orders.map((order) => (
-          <li key={order.id} className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+          <li key={order.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
             <div>
-              <Link to={`/hub/tracking/${order.id}`} className="font-semibold hover:text-primary-600">
+              <Link to={`/hub/tracking/${order.id}`} className="font-medium text-ink hover:text-primary-600">
                 {order.waybill_code}
               </Link>
               {order.priority === "EXPRESS" && (
@@ -68,37 +90,30 @@ function AffectedOrders({ incident }: { incident: Incident }) {
                   <Badge tone="danger">Express</Badge>
                 </span>
               )}
-              <p className="text-xs text-neutral-600">
+              <p className="text-xs text-neutral-500">
                 {order.recipient_name} - {order.delivery_address}
               </p>
             </div>
             <div className="text-right">
               <OrderStatusBadge status={order.status} />
-              <p className="mt-1 text-xs text-neutral-600">
+              <p className="mt-1 text-xs text-neutral-500">
                 Promised {formatClock(order.promised_at)} - ETA {formatClock(order.current_eta)}
               </p>
             </div>
           </li>
         ))}
       </ul>
-    </Card>
+    </section>
   );
 }
 
-function Step({ number, title, done, children }: { number: number; title: string; done: boolean; children: ReactNode }) {
+function Step({ title, done, children }: { title: string; done: boolean; children: ReactNode }) {
   return (
-    <section className="border-t border-line pt-4 first:border-t-0 first:pt-0">
-      <h3 className="flex items-center gap-2 text-sm font-semibold">
-        <span
-          className={cn(
-            "flex size-6 items-center justify-center rounded-full text-xs font-bold",
-            done ? "bg-success-500 text-white" : "bg-primary-50 text-primary-700",
-          )}
-        >
-          {number}
-        </span>
+    <section className="border-t border-line pt-5 first:border-t-0 first:pt-0">
+      <h4 className="flex items-center gap-2 font-sans text-[15px] font-medium text-ink">
+        {done && <CircleCheck className="size-4 text-success-700" aria-label="Done" />}
         {title}
-      </h3>
+      </h4>
       <div className="mt-3">{children}</div>
     </section>
   );
@@ -127,10 +142,12 @@ function ResolutionCard({ incident, onResolved }: { incident: Incident; onResolv
       : null;
 
   return (
-    <Card title="Resolution action">
-      <div className="flex flex-col gap-5">
-        <Step number={1} title="Classify" done={Boolean(incident.category)}>
-          <div className="grid gap-3 sm:grid-cols-2">
+    <section className="rounded-lg border border-line bg-neutral-50/70 p-6">
+      <h3 className="font-sans text-lg font-medium text-ink">Resolution action</h3>
+      <div className="mt-5 flex flex-col gap-5">
+        <Step title="Classify" done={Boolean(incident.category)}>
+          <div className="grid gap-4 md:grid-cols-3">
+            <TextField compact readOnly label="Driver contact" value={`${incident.driver.name} - ${formatPhone(incident.driver.phone)}`} />
             <SelectField
               compact
               label="Incident category"
@@ -162,10 +179,7 @@ function ResolutionCard({ incident, onResolved }: { incident: Incident; onResolv
           )}
         </Step>
 
-        <Step number={2} title="Answer the driver" done={Boolean(incident.hub_response)}>
-          <p className="mb-2 text-sm text-neutral-700">
-            {incident.driver.name} - {formatPhone(incident.driver.phone)}
-          </p>
+        <Step title="Answer the driver" done={Boolean(incident.hub_response)}>
           <TextAreaField
             label="Manager response"
             rows={3}
@@ -189,7 +203,7 @@ function ResolutionCard({ incident, onResolved }: { incident: Incident; onResolv
           {!incident.category && editable && <p className="mt-2 text-xs text-neutral-500">Classify the incident first.</p>}
         </Step>
 
-        <Step number={3} title="Solution" done={incident.status === "RESOLVED"}>
+        <Step title="Solution" done={incident.status === "RESOLVED"}>
           {!editable && (
             <Alert tone={incident.status === "RESOLVED" ? "success" : "info"}>
               {incident.status === "RESOLVING"
@@ -200,19 +214,23 @@ function ResolutionCard({ incident, onResolved }: { incident: Incident; onResolv
           {editable && !ready && <p className="text-sm text-neutral-600">Classify and answer the driver to unlock the solutions.</p>}
           {editable && ready && (
             <div className="flex flex-col gap-4">
-              <div className="grid gap-2 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-3">
                 {(Object.keys(SOLUTION) as ResolutionSolution[]).map((key) => (
                   <button
                     key={key}
                     type="button"
                     onClick={() => setSolution(key)}
+                    aria-pressed={solution === key}
                     className={cn(
-                      "rounded-input border px-3 py-2 text-left text-sm",
-                      solution === key ? "border-primary-600 bg-primary-50" : "border-line bg-white hover:border-primary-200",
+                      "flex items-start gap-3 rounded-lg border bg-white px-3 py-3 text-left text-sm",
+                      solution === key ? "border-2 border-primary-600" : "border-line hover:border-primary-200",
                     )}
                   >
-                    <span className="block font-semibold">{SOLUTION[key].label}</span>
-                    <span className="text-xs text-neutral-600">{SOLUTION[key].hint}</span>
+                    <IconTile icon={SOLUTION_ICON[key]} size="sm" tone={solution === key ? "primary" : "neutral"} />
+                    <span>
+                      <span className="block font-medium text-ink">{SOLUTION[key].label}</span>
+                      <span className="text-xs text-neutral-600">{SOLUTION[key].hint}</span>
+                    </span>
                   </button>
                 ))}
               </div>
@@ -269,8 +287,8 @@ function ResolutionCard({ incident, onResolved }: { incident: Incident; onResolv
         </Step>
 
         {incident.resolutions.length > 0 && (
-          <section className="border-t border-line pt-4">
-            <h3 className="text-sm font-semibold">Decisions</h3>
+          <section className="border-t border-line pt-5">
+            <h4 className="font-sans text-[15px] font-medium text-ink">Decisions</h4>
             <ul className="mt-2 flex flex-col gap-2 text-sm">
               {incident.resolutions.map((resolution) => (
                 <li key={resolution.decided_at} className="flex justify-between gap-3">
@@ -288,7 +306,7 @@ function ResolutionCard({ incident, onResolved }: { incident: Incident; onResolv
           </section>
         )}
       </div>
-    </Card>
+    </section>
   );
 }
 
@@ -308,16 +326,14 @@ export function IncidentDetailPage() {
         title="Issue report"
         description={`Reported by ${data.driver.name}${data.handled_by ? `, handled by ${data.handled_by}` : ""}.`}
         actions={
-          <Link to="/hub/incidents/list" className="inline-flex h-10 items-center rounded-button border border-line bg-white px-4 text-sm font-semibold">
+          <Link to="/hub/incidents/list" className="inline-flex h-10 items-center rounded-lg border border-line bg-white px-4 text-sm font-medium hover:border-primary-200">
             All incidents
           </Link>
         }
       />
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_1.1fr] [&>*]:min-w-0">
-        <div className="flex flex-col gap-6">
-          <ReportCard incident={data} />
-          <AffectedOrders incident={data} />
-        </div>
+      <div className="flex flex-col gap-6 rounded-lg border border-line bg-white p-6">
+        <ReportSection incident={data} />
+        <AffectedOrders incident={data} />
         {/* Keyed by incident only: a status change must not wipe what the manager is typing. */}
         <ResolutionCard key={data.id} incident={data} onResolved={setResult} />
       </div>
