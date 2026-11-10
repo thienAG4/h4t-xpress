@@ -8,7 +8,7 @@ Last-mile delivery management focused on **handling delivery incidents**: driver
 >
 > **Status: all 3 phases built, tested and deployed.** The partner sends an order, the dispatch engine offers it to the best driver with a countdown, the driver follows a real road route, delivers with a proof photo or reports an incident, the hub reroutes or hands the parcels to another driver, and the customer follows everything on the ShopNow tracking page. Phase 3 added road routing and route optimisation (OSRM), reports with Excel and PDF export, the admin configuration screens, a GPS simulator with anomaly detection, an installable driver app and end-to-end tests. It runs on free tiers: web on Vercel, API on Render, PostgreSQL on Neon ([docs/DEPLOY.md](docs/DEPLOY.md)). Progress per screen: [docs/CHECKLIST.md](docs/CHECKLIST.md).
 
-*Tiếng Việt:* Hệ thống quản lý giao hàng chặng cuối, tập trung xử lý sự cố khi đang giao. Đặc tả: [docs/SPEC.md](docs/SPEC.md), tiến độ: [docs/CHECKLIST.md](docs/CHECKLIST.md).
+*Tiếng Việt:* Hệ thống quản lý giao hàng chặng cuối, tập trung xử lý sự cố khi đang giao. Báo cáo gốc của nhóm 11: [docs/original/](docs/original/), đặc tả: [docs/SPEC.md](docs/SPEC.md), tiến độ: [docs/CHECKLIST.md](docs/CHECKLIST.md).
 
 ## Contents
 
@@ -444,6 +444,7 @@ h4t-xpress/
 │  ├─ traceability.md           requirement -> screen, endpoint, test
 │  ├─ adr/                      architecture decision records
 │  ├─ screenshots/              README images (pnpm screenshots)
+│  ├─ original/                 Group 11 course report (PDF), the source of the spec
 │  └─ BAO-CAO-GIAI-DOAN-2-3.md  Phase 2 and 3 report (Vietnamese)
 ├─ docker-compose.yml           full stack: db + api + web (+ osrm profile)
 ├─ docker-compose.dev.yml       development override (hot reload, DB port)
@@ -538,4 +539,4 @@ Free tiers only: the API image on Render, the web app on Vercel, PostgreSQL on N
 
 ## Credits
 
-Business analysis and UI design (survey, BPMN, DFD, use cases, ERD, Figma) by **Group 11**, *Information Systems Analysis and Design* course (252BIM502201), University of Economics and Law, VNU-HCM: Nguyễn Đức Thiện (lead), Lê Quang Huy, Đỗ Hải Thuận, Mai Thế Thư, Nguyễn Tấn Trọng. Supervisor: Triệu Việt Cường.
+Business analysis and UI design (survey, BPMN, DFD, use cases, ERD, Figma) by **Group 11**, *Information Systems Analysis and Design* course (252BIM502201), University of Economics and Law, VNU-HCM: Nguyễn Đức Thiện (lead), Lê Quang Huy, Đỗ Hải Thuận, Mai Thế Thư, Nguyễn Tấn Trọng. Supervisor: Triệu Việt Cường. The full course report is in [docs/original/](docs/original/) (Vietnamese PDF, student IDs removed).
